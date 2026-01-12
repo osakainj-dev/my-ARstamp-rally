@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10箇所スタンプラリー(テスト用)</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; text-align: center; padding: 20px; background-color: #f0f2f5; color: #333; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        /* スタンプ台紙のレイアウト */
+        .stamp-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; 
+            margin: 20px 0; 
+        }
+        
+        .stamp { 
+            min-height: 120px; 
+            border: 2px dashed #bdc3c7; 
+            border-radius: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            background: #fafafa;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .stamp span { font-size: 13px; font-weight: bold; margin: 5px 0; }
+
+        /* スタンプが押された時のスタイル */
+        .stamp.active { 
+            border: 2px solid #e74c3c; 
+            background: #fff5f5; 
+        }
+        .stamp.active::before { content: '☘️'; font-size: 24px; }
+
+        /* 特典リンクボタン */
+        .link-button {
+            display: none; /* 初期は非表示 */
+            margin-top: 8px;
+            padding: 5px 10px;
+            background-color: #0c332c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        button.check-btn { 
+            width: 100%; padding: 15px; font-size: 18px; font-weight: bold;
+            cursor: pointer; background: #5edb34; color: white; border: none; 
+            border-radius: 10px; margin-bottom: 10px; transition: 0.2s;
+        }
+        button.check-btn:active { background: #145f23; transform: scale(0.98); }
+        #status { margin: 10px 0; font-size: 14px; min-height: 1.5em; color: #2c3e50; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>街歩きスタンプラリー</h1>
+    <p>地点に近づいたらボタンを押そう！</p>
+    
+    <div id="status"></div>
+    <button class="check-btn" onclick="checkLocation()">現在地でチェック！</button>
+
+    <div class="stamp-grid" id="stamp-grid">
+        <!-- JSで生成 -->
+    </div>
+</div>
+
+    <!-- スタンプ台紙の下に配置 -->
+    <div id="bonus-area">
+        <h3 id="bonus-title">🎉 特典解放！</h3>
+        <div id="bonus-content"></div>
+    </div>
+
+
+<script>
+    // 10箇所の設定
+    // 緯度・経度はGoogleマップから取得した形式で入力
+    const targets = {
+        "1": { name: "徳丸1丁目(テスト)", lat: 35.7725, lng: 139.6615, url: "https://www.google.com" },
+        "2": { name: "東京駅付近", lat: 35.6812, lng: 139.7671, url: "https://www.tokyostationcity.com" },
+        "3": { name: "地点3", lat: 35.0000, lng: 139.0000, url: "#" },
+        "4": { name: "地点4", lat: 35.0000, lng: 139.0000, url: "#" },
+        "5": { name: "地点5", lat: 35.0000, lng: 139.0000, url: "#" },
+        "6": { name: "地点6", lat: 35.0000, lng: 139.0000, url: "#" },
+        "7": { name: "地点7", lat: 35.0000, lng: 139.0000, url: "#" },
+        "8": { name: "地点8", lat: 35.0000, lng: 139.0000, url: "#" },
+        "9": { name: "地点9", lat: 35.0000, lng: 139.0000, url: "#" },
+        "10": { name: "ゴール", lat: 35.0000, lng: 139.0000, url: "#" }
+    };
+
+    // 初期化
+    const grid = document.getElementById('stamp-grid');
+    for (let i = 1; i <= 10; i++) {
+        const div = document.createElement('div');
+        div.id = `stamp-${i}`;
+        div.className = 'stamp';
+        div.innerHTML = `
+            <span>${targets[i].name}</span>
+            <a href="${targets[i].url}" id="link-${i}" class="link-button" target="_blank">Open AR!</a>
+        `;
+        grid.appendChild(div);
+    }
+
+    window.onload = updateDisplay;
+
+    function checkLocation() {
+        if (!navigator.geolocation) return alert("GPS非対応のブラウザです。");
+        document.getElementById("status").innerText = "位置を計算中...";
+
+        navigator.geolocation.getCurrentPosition((pos) => {
+            const { latitude, longitude, accuracy } = pos.coords;
+            let found = false;
+
+            // 各地点をループして距離を確認
+            for (let id in targets) {
+                const dist = getDistance(latitude, longitude, targets[id].lat, targets[id].lng);
+                
+                // 【テスト用】判定範囲を0.5km (500m) に設定
+                if (dist < 0.5) {
+                    saveStamp(id);
+                    alert(`【${targets[id].name}】のスタンプをゲットしました！`);
+                    found = true;
+                }
+            }
+
+            if (!found) {
+                document.getElementById("status").innerText = "範囲内にスタンプ地点が見つかりません。";
+            } else {
+                updateDisplay();
+            }
+        }, (err) => {
+            document.getElementById("status").innerText = "位置情報の取得に失敗しました。";
+        }, { enableHighAccuracy: true });
+    }
+
+    // 2点間の距離計算 (km)
+    function getDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2) * Math.sin(dLng/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function saveStamp(id) {
+        let stamps = JSON.parse(localStorage.getItem('rally_2026_v2')) || [];
+        if (!stamps.includes(id)) {
+            stamps.push(id);
+            localStorage.setItem('rally_2026_v2', JSON.stringify(stamps));
+        }
+    }
+
+    function updateDisplay() {
+    let stamps = JSON.parse(localStorage.getItem('rally_2026_v2')) || [];
+    
+    // 各スタンプの個別表示更新
+    stamps.forEach(id => {
+        const el = document.getElementById("stamp-" + id);
+        if (el) el.classList.add("active");
+        const link = document.getElementById("link-" + id);
+        if (link) link.style.display = "inline-block";
+    });
+
+    const count = stamps.length; // 現在のスタンプ数
+    document.getElementById("status").innerText = `スタンプ取得数: ${count} / 10`;
+
+    // --- 特典リンクの出し分け処理 ---
+    const bonusArea = document.getElementById("bonus-area");
+    const bonusContent = document.getElementById("bonus-content");
+
+    if (count >= 5) {
+        bonusArea.style.display = "block"; // 5個以上でエリアを表示
+        let html = "";
+
+        // 5個〜9個のときに出すリンク
+        if (count < 10) {
+            html += `<p>5個達成特典！</p>
+                     <a href="https://example.com/halfway-gift" class="bonus-link" target="_blank">中間達成プレゼントを受け取る</a>`;
+        }
+
+        // 10個コンプリートのときに出すリンク
+        if (count === 10) {
+            html = `<p>🎊 コンプリート達成特典！ 🎊</p>
+                    <a href="https://example.com/complete-gift" class="bonus-link" target="_blank" style="background:#e74c3c;">【究極】コンプリート賞品はこちら</a>`;
+        }
+
+        bonusContent.innerHTML = html;
+    }
+}
+
+</script>
+
+</body>
+</html>
