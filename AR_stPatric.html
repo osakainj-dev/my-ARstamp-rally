@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>St. Patrick's Day Rally</title>
+    <title>Shamrock Map Rally</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
@@ -13,127 +13,53 @@
             --cream: #f8f4e3;
         }
 
-        body { 
-            font-family: 'Hiragino Kaku Gothic ProN', sans-serif; 
-            background-color: var(--cream); color: var(--dark-green); 
-            margin: 0; padding: 10px;
-        }
+        body { font-family: 'Hiragino Kaku Gothic ProN', sans-serif; background-color: var(--cream); color: var(--dark-green); margin: 0; padding: 10px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border: 4px double var(--gold); border-radius: 15px; padding: 15px; box-sizing: border-box; }
+        
+        .title-image-container { text-align: center; margin-bottom: 15px; }
+        .title-image { width: 100%; max-width: 450px; height: auto; border-radius: 10px; border: 3px solid var(--gold); box-shadow: 0 4px 10px rgba(0, 154, 73, 0.2); }
 
-        .container { 
-            max-width: 500px; margin: 0 auto; background: white;
-            border: 4px double var(--gold); border-radius: 15px;
-            padding: 15px; box-sizing: border-box;
-        }
+        .description { text-align: center; font-size: 0.85rem; line-height: 1.5; color: var(--dark-green); margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--cream); }
 
-        h1 { text-align: center; color: var(--irish-green); font-size: 1.3rem; margin-top: 0; }
-    
-        /* --- 変更箇所：タイトル画像のスタイル --- */
-        .title-image-container {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        .title-image {
-            width: 100%;            /* 横幅いっぱいにする */
-            max-width: 450px;       /* PC表示時に大きすぎないように制限 */
-            height: auto;           /* 縦横比を維持 */
-            border-radius: 10px;    /* 角を少し丸く */
-            border: 3px solid var(--gold); /* ゴールドの枠線 */
-            box-shadow: 0 4px 10px rgba(0, 154, 73, 0.2); /* 緑色の影 */
-        }
-        /* ------------------------------------ */
-        /* --- 追加：説明文のスタイル --- */
-        .description {
-            text-align: center;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            color: var(--dark-green);
-            margin-bottom: 20px;
-            padding: 0 10px;
-            border-bottom: 1px solid var(--cream);
-            padding-bottom: 15px;
-        }
-        #map { 
-            height: 250px; width: 100%; border-radius: 12px; 
-            margin-bottom: 15px; border: 2px solid var(--irish-green);
-        }
+        /* マップ */
+        #map { height: 280px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); z-index: 1; }
 
-        .check-btn { 
-            width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold;
-            cursor: pointer; background: var(--irish-green); color: white; 
-            border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green);
-            margin-bottom: 20px;
-        }
+        .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; transition: 0.2s; }
         .check-btn:active { transform: translateY(2px); box-shadow: none; }
 
-        /* --- 3x3 グリッド --- */
-        .stamp-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); /* 3列に変更 */
-            gap: 8px; 
-            margin-bottom: 15px;
-        }
-
-        .stamp { 
-            background: #fff; border: 1.5px dashed var(--irish-green);
-            border-radius: 8px; padding: 10px 2px; text-align: center;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 90px; box-sizing: border-box; transition: 0.3s;
-        }
-
-        /* --- 特別なゴール枠 --- */
-        .goal-container {
-            margin-top: 10px;
-            display: flex;
-            justify-content: center;
-        }
-        .stamp.goal {
-            width: 60%; /* ゴール枠を少し大きく */
-            border: 3px double var(--gold); /* ゴールドの二重線 */
-            background: #fffdf0;
-            min-height: 110px;
-        }
-        .stamp.goal span { font-size: 14px; color: #b8860b; }
-
-        /* アクティブ時のスタイル */
+        /* 台紙レイアウト */
+        .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 10px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90px; box-sizing: border-box; transition: 0.3s; }
+        .goal-container { margin-top: 10px; display: flex; justify-content: center; }
+        .stamp.goal { width: 60%; border: 3px double var(--gold); background: #fffdf0; min-height: 110px; }
+        
+        /* アクティブ表示 */
         .stamp.active { border-style: solid; background: #e8f5e9; }
         .stamp.active::before { content: '☘️'; font-size: 18px; }
-        .stamp.goal.active { background: #fff9c4; border-color: var(--gold); }
-        .stamp.goal.active::before { content: '🌈'; font-size: 24px; } /* ゴールは虹！ */
-
+        .stamp.goal.active::before { content: '🌈'; font-size: 24px; }
         .stamp span { font-size: 10px; font-weight: bold; margin: 4px 0; line-height: 1.2; }
 
-        .link-button {
-            display: none; padding: 3px 6px; background: var(--dark-green);
-            color: white; text-decoration: none; border-radius: 4px; font-size: 9px;
-        }
-
+        .link-button { display: none; padding: 3px 6px; background: var(--dark-green); color: white; text-decoration: none; border-radius: 4px; font-size: 9px; margin-top: 4px; }
         #status { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
         
-        #bonus-area {
-            display: none; margin-top: 20px; padding: 15px;
-            background: linear-gradient(135deg, var(--gold) 0%, #fff 100%);
-            border: 2px solid var(--gold); border-radius: 12px; text-align: center;
-        }
-        .bonus-link { 
-            display: block; margin-top: 10px; padding: 12px; background: var(--irish-green); 
-            color: white; text-decoration: none; border-radius: 8px; font-weight: bold;
-        }
+        #bonus-area { display: none; margin-top: 20px; padding: 15px; background: linear-gradient(135deg, var(--gold) 0%, #fff 100%); border: 2px solid var(--gold); border-radius: 12px; text-align: center; }
+        .bonus-link { display: block; margin-top: 10px; padding: 12px; background: var(--irish-green); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; }
 
-        .custom-marker { font-size: 24px; text-align: center; }
+        /* マーカー（ピン）の見た目 */
+        .custom-marker { font-size: 26px; text-align: center; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="title-image-container">
-        <img src="https://placehold.co/800x350/009a49/ffcd00?text=Shamrock+Rally&font=playfair-display" alt="Shamrock Rally タイトル画像" class="title-image">
+        <img src="https://placehold.co/800x350/009a49/ffcd00?text=Shamrock+Rally&font=playfair-display" alt="Shamrock Rally" class="title-image">
     </div>
     
     <p class="description">
         セントパトリックス・デーへようこそ！<br>
-        街の中に隠された10個のシャムロックを探しましょう。<br>
-        5個集めると素敵なプレゼント、コンプリートすると<br>
-        虹の麓の特別なギフトが待っています！
+        地図上の「📍」を目指して歩きましょう。<br>
+        スタンプをゲットすると、ピンが「☘️」に変わります！
     </p>
     
     <div id="map"></div>
@@ -141,7 +67,6 @@
     <button class="check-btn" onclick="checkLocation()">現在地でスタンプ！</button>
 
     <div class="stamp-grid" id="stamp-grid-main"></div>
-
     <div class="goal-container" id="goal-area"></div>
 
     <div id="bonus-area">
@@ -167,32 +92,38 @@
 
     let map, userMarker;
     let markers = {};
-    const storageKey = 'rally_stpatty_2026_v4';
+    const storageKey = 'rally_stpatty_2026_v5';
 
     function init() {
         const gridMain = document.getElementById('stamp-grid-main');
         const goalArea = document.getElementById('goal-area');
 
+        // スタンプ枠の作成
         for (let i = 1; i <= 10; i++) {
             const div = document.createElement('div');
             div.id = `stamp-${i}`;
             div.className = (i === 10) ? 'stamp goal' : 'stamp';
             div.innerHTML = `<span>${targets[i].name}</span>
                              <a href="${targets[i].url}" id="link-${i}" class="link-button" target="_blank">Open AR!</a>`;
-            
             if (i <= 9) gridMain.appendChild(div);
             else goalArea.appendChild(div);
         }
 
+        // マップ初期設定
         map = L.map('map').setView([targets["1"].lat, targets["1"].lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
+        // --- ピン（マーカー）の設置 ---
         for (let id in targets) {
+            // 最初は「未取得」のアイコンで作成
+            let iconHtml = (id === "10") ? '🚩' : '📍'; 
+            
             markers[id] = L.marker([targets[id].lat, targets[id].lng], {
-                icon: L.divIcon({ className: 'custom-marker', html: '⚪', iconSize: [30, 30] })
+                icon: L.divIcon({ className: 'custom-marker', html: iconHtml, iconSize: [30, 30] })
             }).addTo(map).bindPopup(targets[id].name);
         }
-        userMarker = L.circleMarker([0,0], { color: 'blue', radius: 7 }).addTo(map);
+        
+        userMarker = L.circleMarker([0,0], { color: '#007bff', fillColor: '#007bff', fillOpacity: 1, radius: 7 }).addTo(map);
 
         updateDisplay();
         if (navigator.geolocation) {
@@ -208,12 +139,12 @@
             let found = false;
             for (let id in targets) {
                 const dist = getDistance(latitude, longitude, targets[id].lat, targets[id].lng);
-                if (dist < 0.5) { 
+                if (dist < 0.5) { // 500m以内
                     saveStamp(id);
                     found = true;
                 }
             }
-            if (found) alert("☘️ ナイス！スタンプを見つけたよ！");
+            if (found) alert("☘️ おめでとう！スタンプを獲得しました！");
             else alert("近くにスポットがありません。");
             updateDisplay();
         });
@@ -237,13 +168,25 @@
 
     function updateDisplay() {
         let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        
+        // 取得したスタンプに合わせて見た目を更新
         stamps.forEach(id => {
+            // 1. 台紙をアクティブに
             const el = document.getElementById("stamp-" + id);
             if (el) el.classList.add("active");
+            
+            // 2. ARリンクを表示
             const lnk = document.getElementById("link-" + id);
             if (lnk) lnk.style.display = "inline-block";
+            
+            // 3. マップのピンを「取得済」の形に変更
             if (markers[id]) {
-                markers[id].setIcon(L.divIcon({ className: 'custom-marker', html: (id=="10"?'🌈':'☘️'), iconSize: [30, 30] }));
+                let successIcon = (id === "10") ? '🌈' : '☘️';
+                markers[id].setIcon(L.divIcon({ 
+                    className: 'custom-marker', 
+                    html: successIcon, 
+                    iconSize: [30, 30] 
+                }));
             }
         });
 
@@ -251,15 +194,11 @@
         document.getElementById("status").innerText = `スタンプ取得数: ${count} / 10`;
 
         const bonusArea = document.getElementById("bonus-area");
-        const bonusContent = document.getElementById("bonus-content");
-
         if (count >= 5) {
             bonusArea.style.display = "block";
-            if (count < 10) {
-                bonusContent.innerHTML = `<p>☘️ 5個達成特典！</p><a href="#" class="bonus-link">中間プレゼントを受け取る</a>`;
-            } else {
-                bonusContent.innerHTML = `<p>🌈 コンプリートおめでとう！ 🌈</p><a href="#" class="bonus-link" style="background:#e74c3c;">【究極】コンプリート賞品はこちら</a>`;
-            }
+            document.getElementById("bonus-content").innerHTML = (count < 10) ? 
+                `<p>☘️ 5個達成！中間プレゼント！</p><a href="#" class="bonus-link">中間特典を受け取る</a>` :
+                `<p>🌈 コンプリートおめでとう！ 🌈</p><a href="#" class="bonus-link" style="background:#e74c3c;">究極の賞品はこちら</a>`;
         }
     }
 
