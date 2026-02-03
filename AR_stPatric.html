@@ -40,12 +40,16 @@
         .stamp.active::before { content: '☘️'; font-size: 16px; }
         .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
 
-        /* モーダル */
+        /* --- モーダルのスタイル（画像対応） --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 25px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 80vh; overflow-y: auto; }
-        .modal-close { position: absolute; top: 5px; right: 10px; font-size: 24px; cursor: pointer; }
-        .modal-title { color: var(--irish-green); border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-top: 10px; }
-        .modal-body { line-height: 1.6; font-size: 0.95rem; margin-top: 15px; }
+        .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 5px; right: 10px; font-size: 24px; cursor: pointer; z-index: 10; }
+        
+        /* モーダル内画像 */
+        .modal-image { width: 100%; height: 200px; object-fit: cover; border-radius: 5px; border: 2px solid var(--gold); margin-top: 10px; margin-bottom: 15px; display: block; }
+        
+        .modal-title { color: var(--irish-green); border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; }
+        .modal-body { line-height: 1.6; font-size: 0.9rem; color: #333; }
 
         #status { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
         .custom-marker { font-size: 26px; text-align: center; }
@@ -80,14 +84,17 @@
     const targets = {
         "1": { 
             name: "シャムロック広場", lat: 35.7725, lng: 139.6615, arUrl: "#",
+            imgUrl: "https://placehold.co/600x400/009a49/ffffff?text=Shamrock",
             description: "<b>【シャムロックとは？】</b><br>三つ葉のクローバーのこと。聖パトリックが『三位一体』を説くために使った、アイルランドの象徴です。" 
         },
         "2": { 
             name: "妖精の靴屋", lat: 35.6812, lng: 139.7671, arUrl: "#",
+            imgUrl: "https://placehold.co/600x400/8b4513/ffffff?text=Leprechaun",
             description: "<b>【レプラコーンの伝説】</b><br>一人で靴を修理している妖精。彼を捕まえたら、虹の麓の黄金の壺まで案内させましょう！" 
         },
         "3": { 
             name: "ダブリンの扉", lat: 35.6924, lng: 139.6971, arUrl: "#",
+            imgUrl: "https://placehold.co/600x400/e74c3c/ffffff?text=Dublin+Door",
             description: "<b>【カラフルなドア】</b><br>ダブリンの街並みの特徴である鮮やかなドア。酔った住人が自分の家を間違えないように塗り分けたという説も？" 
         },
         "4": { 
