@@ -27,6 +27,20 @@
 
         h1 { text-align: center; color: var(--irish-green); font-size: 1.3rem; margin-top: 0; }
     
+        /* --- 変更箇所：タイトル画像のスタイル --- */
+        .title-image-container {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .title-image {
+            width: 100%;            /* 横幅いっぱいにする */
+            max-width: 450px;       /* PC表示時に大きすぎないように制限 */
+            height: auto;           /* 縦横比を維持 */
+            border-radius: 10px;    /* 角を少し丸く */
+            border: 3px solid var(--gold); /* ゴールドの枠線 */
+            box-shadow: 0 4px 10px rgba(0, 154, 73, 0.2); /* 緑色の影 */
+        }
+        /* ------------------------------------ */
         /* --- 追加：説明文のスタイル --- */
         .description {
             text-align: center;
@@ -111,7 +125,9 @@
 <body>
 
 <div class="container">
-    <h1>☘️ Shamrock Rally ☘️</h1>
+    <div class="title-image-container">
+        <img src="https://placehold.co/800x350/009a49/ffcd00?text=Shamrock+Rally&font=playfair-display" alt="Shamrock Rally タイトル画像" class="title-image">
+    </div>
     
     <p class="description">
         セントパトリックス・デーへようこそ！<br>
