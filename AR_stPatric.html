@@ -116,4 +116,120 @@
     </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const targets = {
+        "1": { name: "地点1", lat: 35.7725, lng: 139.6615, url: "https://palanar.com/ar_contents/ifo2026_1" },
+        "2": { name: "地点2", lat: 35.6812, lng: 139.7671, url: "#" },
+        "3": { name: "地点3", lat: 35.6924, lng: 139.6971, url: "#" },
+        "4": { name: "地点4", lat: 35.7000, lng: 139.7000, url: "#" },
+        "5": { name: "地点5", lat: 35.7100, lng: 139.7100, url: "#" },
+        "6": { name: "地点6", lat: 35.7200, lng: 139.7200, url: "#" },
+        "7": { name: "地点7", lat: 35.7300, lng: 139.7300, url: "#" },
+        "8": { name: "地点8", lat: 35.7400, lng: 139.7400, url: "#" },
+        "9": { name: "地点9", lat: 35.7500, lng: 139.7500, url: "#" },
+        "10": { name: "🍀 ゴール 🍀", lat: 35.7600, lng: 139.7600, url: "#" }
+    };
+
+    let map, userMarker;
+    let markers = {};
+    const storageKey = 'rally_stpatty_2026_v4';
+
+    function init() {
+        const gridMain = document.getElementById('stamp-grid-main');
+        const goalArea = document.getElementById('goal-area');
+
+        for (let i = 1; i <= 10; i++) {
+            const div = document.createElement('div');
+            div.id = `stamp-${i}`;
+            div.className = (i === 10) ? 'stamp goal' : 'stamp';
+            div.innerHTML = `<span>${targets[i].name}</span>
+                             <a href="${targets[i].url}" id="link-${i}" class="link-button" target="_blank">Open AR!</a>`;
+            
+            if (i <= 9) gridMain.appendChild(div);
+            else goalArea.appendChild(div);
+        }
+
+        map = L.map('map').setView([targets["1"].lat, targets["1"].lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        for (let id in targets) {
+            markers[id] = L.marker([targets[id].lat, targets[id].lng], {
+                icon: L.divIcon({ className: 'custom-marker', html: '⚪', iconSize: [30, 30] })
+            }).addTo(map).bindPopup(targets[id].name);
+        }
+        userMarker = L.circleMarker([0,0], { color: 'blue', radius: 7 }).addTo(map);
+
+        updateDisplay();
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(pos => {
+                userMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
+            }, null, { enableHighAccuracy: true });
+        }
+    }
+
+    function checkLocation() {
+        navigator.geolocation.getCurrentPosition(pos => {
+            const { latitude, longitude } = pos.coords;
+            let found = false;
+            for (let id in targets) {
+                const dist = getDistance(latitude, longitude, targets[id].lat, targets[id].lng);
+                if (dist < 0.5) { 
+                    saveStamp(id);
+                    found = true;
+                }
+            }
+            if (found) alert("☘️ ナイス！スタンプを見つけたよ！");
+            else alert("近くにスポットがありません。");
+            updateDisplay();
+        });
+    }
+
+    function getDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function saveStamp(id) {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        if (!stamps.includes(id)) {
+            stamps.push(id);
+            localStorage.setItem(storageKey, JSON.stringify(stamps));
+        }
+    }
+
+    function updateDisplay() {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        stamps.forEach(id => {
+            const el = document.getElementById("stamp-" + id);
+            if (el) el.classList.add("active");
+            const lnk = document.getElementById("link-" + id);
+            if (lnk) lnk.style.display = "inline-block";
+            if (markers[id]) {
+                markers[id].setIcon(L.divIcon({ className: 'custom-marker', html: (id=="10"?'🌈':'☘️'), iconSize: [30, 30] }));
+            }
+        });
+
+        const count = stamps.length;
+        document.getElementById("status").innerText = `スタンプ取得数: ${count} / 10`;
+
+        const bonusArea = document.getElementById("bonus-area");
+        const bonusContent = document.getElementById("bonus-content");
+
+        if (count >= 5) {
+            bonusArea.style.display = "block";
+            if (count < 10) {
+                bonusContent.innerHTML = `<p>☘️ 5個達成特典！</p><a href="#" class="bonus-link">中間プレゼントを受け取る</a>`;
+            } else {
+                bonusContent.innerHTML = `<p>🌈 コンプリートおめでとう！ 🌈</p><a href="#" class="bonus-link" style="background:#e74c3c;">【究極】コンプリート賞品はこちら</a>`;
+            }
+        }
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
