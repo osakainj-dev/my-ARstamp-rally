@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Shamrock Map Rally</title>
+    <title>St. Patrick's Culture Rally</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
@@ -17,36 +17,46 @@
         .container { max-width: 500px; margin: 0 auto; background: white; border: 4px double var(--gold); border-radius: 15px; padding: 15px; box-sizing: border-box; }
         
         .title-image-container { text-align: center; margin-bottom: 15px; }
-        .title-image { width: 100%; max-width: 450px; height: auto; border-radius: 10px; border: 3px solid var(--gold); box-shadow: 0 4px 10px rgba(0, 154, 73, 0.2); }
+        .title-image { width: 100%; max-width: 450px; height: auto; border-radius: 10px; border: 3px solid var(--gold); }
 
-        .description { text-align: center; font-size: 0.85rem; line-height: 1.5; color: var(--dark-green); margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--cream); }
+        .description { text-align: center; font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--cream); }
 
-        /* マップ */
-        #map { height: 280px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); z-index: 1; }
+        #map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); }
 
-        .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; transition: 0.2s; }
+        .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; }
         .check-btn:active { transform: translateY(2px); box-shadow: none; }
 
-        /* 台紙レイアウト */
+        /* スタンプ台のデザイン */
         .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-        .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 10px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90px; box-sizing: border-box; transition: 0.3s; }
+        .stamp { 
+            background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; 
+            padding: 8px 2px; text-align: center; display: flex; flex-direction: column; 
+            align-items: center; justify-content: flex-start; min-height: 120px; box-sizing: border-box; 
+        }
+        .stamp.goal { width: 60%; border: 3px double var(--gold); background: #fffdf0; min-height: 130px; }
         .goal-container { margin-top: 10px; display: flex; justify-content: center; }
-        .stamp.goal { width: 60%; border: 3px double var(--gold); background: #fffdf0; min-height: 110px; }
-        
-        /* アクティブ表示 */
-        .stamp.active { border-style: solid; background: #e8f5e9; }
-        .stamp.active::before { content: '☘️'; font-size: 18px; }
-        .stamp.goal.active::before { content: '🌈'; font-size: 24px; }
-        .stamp span { font-size: 10px; font-weight: bold; margin: 4px 0; line-height: 1.2; }
 
-        .link-button { display: none; padding: 3px 6px; background: var(--dark-green); color: white; text-decoration: none; border-radius: 4px; font-size: 9px; margin-top: 4px; }
-        #status { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+        .stamp span { font-size: 10px; font-weight: bold; margin-bottom: 5px; min-height: 24px; display: flex; align-items: center; }
         
+        /* ボタン類 */
+        .btn-link { 
+            display: block; width: 90%; padding: 4px 0; margin: 2px 0; 
+            text-decoration: none; border-radius: 4px; font-size: 9px; font-weight: bold; 
+        }
+        /* 詳細リンク：最初から表示（ゴールド系） */
+        .detail-btn { background: white; color: var(--dark-green); border: 1px solid var(--gold); }
+        /* ARリンク：取得後に表示（グリーン系） */
+        .ar-btn { background: var(--irish-green); color: white; display: none; }
+
+        /* アクティブ状態 */
+        .stamp.active { border-style: solid; background: #e8f5e9; }
+        .stamp.active::before { content: '☘️'; font-size: 16px; margin-bottom: 2px; }
+        .stamp.goal.active::before { content: '🌈'; font-size: 20px; }
+
+        #status { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
         #bonus-area { display: none; margin-top: 20px; padding: 15px; background: linear-gradient(135deg, var(--gold) 0%, #fff 100%); border: 2px solid var(--gold); border-radius: 12px; text-align: center; }
         .bonus-link { display: block; margin-top: 10px; padding: 12px; background: var(--irish-green); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; }
-
-        /* マーカー（ピン）の見た目 */
-        .custom-marker { font-size: 26px; text-align: center; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
+        .custom-marker { font-size: 26px; text-align: center; }
     </style>
 </head>
 <body>
@@ -57,9 +67,9 @@
     </div>
     
     <p class="description">
-        セントパトリックス・デーへようこそ！<br>
-        地図上の「📍」を目指して歩きましょう。<br>
-        スタンプをゲットすると、ピンが「☘️」に変わります！
+        街を歩いてアイルランドの知恵を集めよう！<br>
+        「🔍詳細」で場所の由来や豆知識をチェック。<br>
+        目的地に着いたらスタンプを押してAR体験！
     </p>
     
     <div id="map"></div>
@@ -78,52 +88,50 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const targets = {
-        "1": { name: "徳丸1丁目(テスト)", lat: 35.7725, lng: 139.6615, url: "https://palanar.com/ar_contents/ifo2026_1" },
-        "2": { name: "東京駅付近", lat: 35.6812, lng: 139.7671, url: "https://www.tokyostationcity.com" },
-        "3": { name: "新宿（TEST)", lat: 35.6924, lng: 139.6971, url: "https://palanar.app/v2/ar_contents/copy_2c9648ec4f1ee40a" },
-        "4": { name: "地点4", lat: 35.7000, lng: 139.7000, url: "#" },
-        "5": { name: "地点5", lat: 35.7100, lng: 139.7100, url: "#" },
-        "6": { name: "地点6", lat: 35.7200, lng: 139.7200, url: "#" },
-        "7": { name: "地点7", lat: 35.7300, lng: 139.7300, url: "#" },
-        "8": { name: "地点8", lat: 35.7400, lng: 139.7400, url: "#" },
-        "9": { name: "地点9", lat: 35.7500, lng: 139.7500, url: "#" },
-        "10": { name: "🍀 ゴール 🍀", lat: 35.7600, lng: 139.7600, url: "#" }
+        "1": { name: "ケルトの広場", lat: 35.7725, lng: 139.6615, detailUrl: "https://example.com/detail1", arUrl: "https://palanar.com/ar_contents/ifo2026_1" },
+        "2": { name: "三つ葉の小径", lat: 35.6812, lng: 139.7671, detailUrl: "https://example.com/detail2", arUrl: "#" },
+        "3": { name: "妖精の森", lat: 35.6924, lng: 139.6971, detailUrl: "https://example.com/detail3", arUrl: "#" },
+        "4": { name: "地点4", lat: 35.7000, lng: 139.7000, detailUrl: "#", arUrl: "#" },
+        "5": { name: "地点5", lat: 35.7100, lng: 139.7100, detailUrl: "#", arUrl: "#" },
+        "6": { name: "地点6", lat: 35.7200, lng: 139.7200, detailUrl: "#", arUrl: "#" },
+        "7": { name: "地点7", lat: 35.7300, lng: 139.7300, detailUrl: "#", arUrl: "#" },
+        "8": { name: "地点8", lat: 35.7400, lng: 139.7400, detailUrl: "#", arUrl: "#" },
+        "9": { name: "地点9", lat: 35.7500, lng: 139.7500, detailUrl: "#", arUrl: "#" },
+        "10": { name: "🌈 ゴール地点", lat: 35.7600, lng: 139.7600, detailUrl: "https://example.com/goal-info", arUrl: "#" }
     };
 
     let map, userMarker;
     let markers = {};
-    const storageKey = 'rally_stpatty_2026_v5';
+    const storageKey = 'rally_stpatty_2026_detail_v1';
 
     function init() {
         const gridMain = document.getElementById('stamp-grid-main');
         const goalArea = document.getElementById('goal-area');
 
-        // スタンプ枠の作成
         for (let i = 1; i <= 10; i++) {
             const div = document.createElement('div');
             div.id = `stamp-${i}`;
             div.className = (i === 10) ? 'stamp goal' : 'stamp';
-            div.innerHTML = `<span>${targets[i].name}</span>
-                             <a href="${targets[i].url}" id="link-${i}" class="link-button" target="_blank">Open AR!</a>`;
+            div.innerHTML = `
+                <span>${targets[i].name}</span>
+                <a href="${targets[i].detailUrl}" class="btn-link detail-btn" target="_blank">🔍 詳細を見る</a>
+                <a href="${targets[i].arUrl}" id="ar-link-${i}" class="btn-link ar-btn" target="_blank">☘️ Open AR!</a>
+            `;
             if (i <= 9) gridMain.appendChild(div);
             else goalArea.appendChild(div);
         }
 
-        // マップ初期設定
         map = L.map('map').setView([targets["1"].lat, targets["1"].lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // --- ピン（マーカー）の設置 ---
         for (let id in targets) {
-            // 最初は「未取得」のアイコンで作成
             let iconHtml = (id === "10") ? '🚩' : '📍'; 
-            
             markers[id] = L.marker([targets[id].lat, targets[id].lng], {
                 icon: L.divIcon({ className: 'custom-marker', html: iconHtml, iconSize: [30, 30] })
             }).addTo(map).bindPopup(targets[id].name);
         }
         
-        userMarker = L.circleMarker([0,0], { color: '#007bff', fillColor: '#007bff', fillOpacity: 1, radius: 7 }).addTo(map);
+        userMarker = L.circleMarker([0,0], { color: '#007bff', radius: 7 }).addTo(map);
 
         updateDisplay();
         if (navigator.geolocation) {
@@ -139,69 +147,53 @@
             let found = false;
             for (let id in targets) {
                 const dist = getDistance(latitude, longitude, targets[id].lat, targets[id].lng);
-                if (dist < 0.5) { // 500m以内
-                    saveStamp(id);
-                    found = true;
-                }
+                if (dist < 0.5) { saveStamp(id); found = true; }
             }
-            if (found) alert("☘️ おめでとう！スタンプを獲得しました！");
-            else alert("近くにスポットがありません。");
+            if (found) alert("☘️ おめでとう！知恵のスタンプをゲット！");
+            else alert("近くにスポットがありません。地図の📍を目指してね。");
             updateDisplay();
         });
     }
 
     function getDistance(lat1, lng1, lat2, lng2) {
         const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLng = (lng2 - lng1) * Math.PI / 180;
-        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const dLat=(lat2-lat1)*Math.PI/180; const dLng=(lng2-lng1)*Math.PI/180;
+        const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+        return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
     }
 
     function saveStamp(id) {
         let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
-        if (!stamps.includes(id)) {
-            stamps.push(id);
-            localStorage.setItem(storageKey, JSON.stringify(stamps));
-        }
+        if (!stamps.includes(id)) { stamps.push(id); localStorage.setItem(storageKey, JSON.stringify(stamps)); }
     }
 
     function updateDisplay() {
         let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
-        
-        // 取得したスタンプに合わせて見た目を更新
         stamps.forEach(id => {
-            // 1. 台紙をアクティブに
             const el = document.getElementById("stamp-" + id);
             if (el) el.classList.add("active");
             
-            // 2. ARリンクを表示
-            const lnk = document.getElementById("link-" + id);
-            if (lnk) lnk.style.display = "inline-block";
+            // 取得後のみARリンクを表示
+            const arLnk = document.getElementById("ar-link-" + id);
+            if (arLnk) arLnk.style.display = "block";
             
-            // 3. マップのピンを「取得済」の形に変更
             if (markers[id]) {
                 let successIcon = (id === "10") ? '🌈' : '☘️';
-                markers[id].setIcon(L.divIcon({ 
-                    className: 'custom-marker', 
-                    html: successIcon, 
-                    iconSize: [30, 30] 
-                }));
+                markers[id].setIcon(L.divIcon({ className: 'custom-marker', html: successIcon, iconSize: [30, 30] }));
             }
         });
 
         const count = stamps.length;
-        document.getElementById("status").innerText = `スタンプ取得数: ${count} / 10`;
+        document.getElementById("status").innerText = `集めた知恵: ${count} / 10`;
 
         const bonusArea = document.getElementById("bonus-area");
         if (count >= 5) {
             bonusArea.style.display = "block";
             document.getElementById("bonus-content").innerHTML = (count < 10) ? 
-                `<p>☘️ 5個達成！中間プレゼント！</p><a href="#" class="bonus-link">中間特典を受け取る</a>` :
-                `<p>🌈 コンプリートおめでとう！ 🌈</p><a href="#" class="bonus-link" style="background:#e74c3c;">究極の賞品はこちら</a>`;
+                `<p>☘️ 5個達成！中級ケルトマスター！</p><a href="#" class="bonus-link">中間ギフトを受け取る</a>` :
+                `<p>🌈 コンプリート！真のアイルランド通！ 🌈</p><a href="#" class="bonus-link" style="background:#e74c3c;">究極の宝箱を開ける</a>`;
         }
     }
-
     window.onload = init;
 </script>
 </body>
