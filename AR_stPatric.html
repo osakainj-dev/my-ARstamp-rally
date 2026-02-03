@@ -44,9 +44,16 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const targets = {
-        "1": { name: "徳丸1丁目", lat: 35.7725, lng: 139.6615 },
-        "2": { name: "東京駅", lat: 35.6812, lng: 139.7671 },
-        "3": { name: "新宿", lat: 35.6924, lng: 139.6971 }
+"1": { name: "徳丸1丁目", lat: 35.7725, lng: 139.6615, url: "https://palanar.com/ar_contents/ifo2026_1" },
+        "2": { name: "東京駅付近", lat: 35.6812, lng: 139.7671, url: "https://www.tokyostationcity.com" },
+        "3": { name: "新宿（TEST)", lat: 35.69243279765308, lng: 139.69716272339323, url: "https://palanar.app/v2/ar_contents/copy_2c9648ec4f1ee40a" },
+        "4": { name: "地点4", lat: 35.0, lng: 139.0, url: "#" },
+        "5": { name: "地点5", lat: 35.0, lng: 139.0, url: "#" },
+        "6": { name: "地点6", lat: 35.0, lng: 139.0, url: "#" },
+        "7": { name: "地点7", lat: 35.0, lng: 139.0, url: "#" },
+        "8": { name: "地点8", lat: 35.0, lng: 139.0, url: "#" },
+        "9": { name: "地点9", lat: 35.0, lng: 139.0, url: "#" },
+        "10": { name: "ゴール", lat: 35.0, lng: 139.0, url: "#" }
     };
 
     let map, userMarker;
@@ -78,22 +85,80 @@
         grid.appendChild(div);
     });
 
-    function checkLocation() {
-        if (!navigator.geolocation) return alert("お使いのブラウザはGPS非対応です");
-        
-        navigator.geolocation.getCurrentPosition(pos => {
+function checkLocation() {
+        if (!navigator.geolocation) return alert("GPS非対応です。");
+        const btn = document.querySelector('.check-btn');
+        btn.innerText = "探索中...";
+        btn.style.opacity = "0.7";
+
+        navigator.geolocation.getCurrentPosition((pos) => {
             const { latitude, longitude } = pos.coords;
-            userMarker.setLatLng([latitude, longitude]);
-            map.setView([latitude, longitude], 15);
-            
-            // 距離判定などのロジック（以下略）
-            document.getElementById('status').innerText = `現在地を取得しました`;
-        }, err => {
-            alert("位置情報の取得を許可してください（設定 > プライバシー）");
-        });
+            let found = false;
+
+            for (let id in targets) {
+                const dist = getDistance(latitude, longitude, targets[id].lat, targets[id].lng);
+                if (dist < 0.5) {
+                    saveStamp(id);
+                    found = true;
+                }
+            }
+
+            if (!found) alert("近くにスポットがありません。");
+            btn.innerText = "現在地でスタンプを押す";
+            btn.style.opacity = "1";
+            updateDisplay();
+        }, (err) => {
+            alert("位置情報の取得に失敗しました。設定を確認してください。");
+            btn.innerText = "現在地でスタンプを押す";
+            btn.style.opacity = "1";
+        }, { enableHighAccuracy: true });
     }
 
-    window.onload = initMap;
+    function getDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function saveStamp(id) {
+        let stamps = JSON.parse(localStorage.getItem('rally_2026_v2')) || [];
+        if (!stamps.includes(id)) {
+            stamps.push(id);
+            localStorage.setItem('rally_2026_v2', JSON.stringify(stamps));
+        }
+    }
+
+    function updateDisplay() {
+        let stamps = JSON.parse(localStorage.getItem('rally_2026_v2')) || [];
+        stamps.forEach(id => {
+            const el = document.getElementById("stamp-" + id);
+            if (el) el.classList.add("active");
+            const link = document.getElementById("link-" + id);
+            if (link) link.style.display = "inline-block";
+        });
+
+        const count = stamps.length;
+        document.getElementById("status").innerText = `スタンプ獲得数: ${count} / 10`;
+        document.getElementById("progress-bar").style.width = `${(count / 10) * 100}%`;
+
+        const bonusArea = document.getElementById("bonus-area");
+        const bonusContent = document.getElementById("bonus-content");
+
+        if (count >= 5) {
+            bonusArea.style.display = "block";
+            let html = "";
+            if (count < 10) {
+                html = `<p>5個達成！中間プレゼントがあります。</p>
+                        <a href="#" class="bonus-link">クーポンを表示</a>`;
+            } else {
+                html = `<p>🎊 コンプリート！素晴らしい！ 🎊</p>
+                        <a href="#" class="bonus-link" style="background:var(--secondary-color)">特別景品を申し込む</a>`;
+            }
+            bonusContent.innerHTML = html;
+        }
+    }
 </script>
 </body>
 </html>
