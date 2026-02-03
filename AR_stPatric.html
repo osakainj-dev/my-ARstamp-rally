@@ -2,155 +2,98 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>St. Patrick's Day Stamp Rally</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>St. Patrick's Rally</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root {
-            --irish-green: #009a49; /* アイルランド国旗の緑 */
-            --gold: #ffcd00; /* ケルト風のゴールド */
-            --dark-green: #00622d;
-            --cream: #f8f4e3;
-        }
-
-        body { 
-            font-family: 'Georgia', serif; /* ケルト風に少しクラシックなセリフ体 */
-            background-color: var(--cream); 
-            color: var(--dark-green); 
-            margin: 0; padding: 15px;
-        }
-
-        .container { 
-            max-width: 500px; margin: 0 auto; 
-            border: 4px double var(--gold); /* 二重線でケルト風の縁取り */
-            padding: 15px;
-            background: white;
-            border-radius: 10px;
-        }
-
-        h1 { 
-            text-align: center; color: var(--irish-green); 
-            font-variant: small-caps; margin-bottom: 5px;
-        }
-
-        /* マップのスタイル */
+        :root { --irish-green: #009a49; --gold: #ffcd00; --cream: #f8f4e3; }
+        body { font-family: sans-serif; background-color: var(--cream); margin: 0; padding: 10px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border: 2px solid var(--gold); border-radius: 15px; padding: 15px; box-sizing: border-box; }
+        
+        /* 地図の高さを確実に確保 */
         #map { 
-            height: 300px; 
+            height: 250px; 
             width: 100%; 
-            border-radius: 15px; 
-            margin-bottom: 20px; 
-            border: 2px solid var(--irish-green);
+            background: #eee; 
+            border-radius: 10px; 
+            margin-bottom: 15px;
             z-index: 1;
         }
 
-        /* ボタンデザイン */
         .check-btn { 
-            width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold;
-            cursor: pointer; background: var(--irish-green); color: white; 
-            border: none; border-radius: 50px; 
-            box-shadow: 0 4px 0 var(--dark-green);
-            transition: 0.2s; margin-bottom: 20px;
+            width: 100%; padding: 16px; background: var(--irish-green); color: white; 
+            border: none; border-radius: 30px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 0 #00622d; margin-bottom: 15px;
         }
-        .check-btn:active { transform: translateY(3px); box-shadow: none; }
-
-        /* スタンプ台 */
-        .stamp-grid { 
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; 
-        }
-        .stamp { 
-            background: #fff; border: 2px dashed var(--irish-green);
-            border-radius: 12px; padding: 15px 5px; text-align: center;
-            transition: 0.3s; position: relative;
-        }
-        .stamp.active { 
-            border-style: solid; background: #e8f5e9;
-            box-shadow: inset 0 0 10px rgba(0,154,73,0.1);
-        }
-        .stamp.active::after {
-            content: '☘️'; font-size: 24px; display: block;
-        }
-
-        #status { text-align: center; font-weight: bold; margin-bottom: 10px; }
-        
-        /* 特典エリア */
-        #bonus-area {
-            display: none; margin-top: 20px; padding: 15px;
-            background: var(--gold); border-radius: 10px; text-align: center;
-            color: var(--dark-green); font-weight: bold;
-        }
-        .bonus-link { color: white; background: var(--dark-green); padding: 10px; display: block; text-decoration: none; border-radius: 5px; margin-top:10px; }
-
-        /* カスタムマーカーのスタイル */
-        .custom-marker { font-size: 24px; text-align: center; }
+        .stamp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .stamp { border: 2px dashed var(--irish-green); padding: 10px; border-radius: 10px; text-align: center; font-size: 12px; min-height: 60px; }
+        .stamp.active { background: #e8f5e9; border-style: solid; }
+        .stamp.active::after { content: '☘️'; display: block; font-size: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>☘️ Lucky Stamp Rally ☘️</h1>
-    
+    <h2 style="text-align:center; color:var(--irish-green);">☘️ St. Paddy's Map</h2>
     <div id="map"></div>
-
-    <div id="status">位置情報を取得中...</div>
-    <button class="check-btn" onclick="checkLocation()">現在地でチェックイン！</button>
-
+    <div id="status" style="text-align:center; font-size:14px; margin-bottom:10px;">GPSをオンにしてください</div>
+    <button class="check-btn" onclick="checkLocation()">現在地でチェック！</button>
     <div class="stamp-grid" id="stamp-grid"></div>
-
-    <div id="bonus-area">
-        <div id="bonus-content"></div>
-    </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script>
     const targets = {
-        "1": { name: "徳丸1丁目", lat: 35.7725, lng: 139.6615, url: "#" },
-        "2": { name: "東京駅", lat: 35.6812, lng: 139.7671, url: "#" },
-        "3": { name: "新宿", lat: 35.6924, lng: 139.6971, url: "#" },
-        "4": { name: "地点4", lat: 35.7000, lng: 139.7000, url: "#" },
-        "5": { name: "地点5", lat: 35.7100, lng: 139.7100, url: "#" },
-        "6": { name: "地点6", lat: 35.7200, lng: 139.7200, url: "#" },
-        "7": { name: "地点7", lat: 35.7300, lng: 139.7300, url: "#" },
-        "8": { name: "地点8", lat: 35.7400, lng: 139.7400, url: "#" },
-        "9": { name: "地点9", lat: 35.7500, lng: 139.7500, url: "#" },
-        "10": { name: "ゴール", lat: 35.7600, lng: 139.7600, url: "#" }
+        "1": { name: "徳丸1丁目", lat: 35.7725, lng: 139.6615 },
+        "2": { name: "東京駅", lat: 35.6812, lng: 139.7671 },
+        "3": { name: "新宿", lat: 35.6924, lng: 139.6971 }
     };
 
     let map, userMarker;
     let markers = {};
 
-    // 地図の初期化
     function initMap() {
-        // 最初の地点を中心に表示
-        map = L.map('map').setView([targets["1"].lat, targets["1"].lng], 13);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
+        try {
+            // 地図の初期位置（デフォルト：東京）
+            map = L.map('map').setView([35.6895, 139.6917], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // 各スポットにマーカーを設置
-        for (let id in targets) {
-            const t = targets[id];
-            const marker = L.marker([t.lat, t.lng], {
-                icon: L.divIcon({
-                    className: 'custom-marker',
-                    html: '⚪', // 初期は白い丸
-                    iconSize: [30, 30]
-                })
-            }).addTo(map).bindPopup(t.name);
-            markers[id] = marker;
+            for (let id in targets) {
+                markers[id] = L.marker([targets[id].lat, targets[id].lng]).addTo(map).bindPopup(targets[id].name);
+            }
+            userMarker = L.circleMarker([0,0], {radius: 8, color: 'blue'}).addTo(map);
+            console.log("Map initialized");
+        } catch (e) {
+            document.getElementById('status').innerText = "地図の読み込みに失敗しました";
         }
-
-        // ユーザーの現在地表示用マーカー
-        userMarker = L.circleMarker([0, 0], { color: 'blue', radius: 8 }).addTo(map);
     }
 
-    // スタンプグリッドの生成
+    // スタンプ枠の生成
     const grid = document.getElementById('stamp-grid');
-    for (let i = 1; i <= 10; i++) {
+    Object.keys(targets).forEach(id => {
         const div = document.createElement('div');
-        div.id = `stamp-${i}`;
+        div.id = `stamp-${id}`;
         div.className = 'stamp';
-        div.innerHTML = `<span style="font-size:12px">${targets[i].name}</span>`;
+        div.innerText = targets[id].name;
         grid.appendChild(div);
+    });
+
+    function checkLocation() {
+        if (!navigator.geolocation) return alert("お使いのブラウザはGPS非対応です");
+        
+        navigator.geolocation.getCurrentPosition(pos => {
+            const { latitude, longitude } = pos.coords;
+            userMarker.setLatLng([latitude, longitude]);
+            map.setView([latitude, longitude], 15);
+            
+            // 距離判定などのロジック（以下略）
+            document.getElementById('status').innerText = `現在地を取得しました`;
+        }, err => {
+            alert("位置情報の取得を許可してください（設定 > プライバシー）");
+        });
+    }
+
+    window.onload = initMap;
+</script>
+</body>
+</html>
