@@ -80,17 +80,56 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const targets = {
-        "1": { name: "三つ葉の広場", lat: 35.7725, lng: 139.6615, arUrl: "#", imgUrl: "https://images.unsplash.com/photo-1590076215667-873d3253503a?w=500", description: "三つ葉のクローバーはアイルランドの国花です。" },
-        "2": { name: "妖精の靴屋", lat: 35.6812, lng: 139.7671, arUrl: "#", imgUrl: "https://images.unsplash.com/photo-1599839619722-397514112634?w=500", description: "レプラコーンという靴直しの妖精の伝説があります。" },
-        "3": { name: "ダブリンの扉", lat: 35.6924, lng: 139.6971, arUrl: "#", imgUrl: "https://images.unsplash.com/photo-1582234032482-628d7a868430?w=500", description: "カラフルなドアはダブリンの象徴です。" },
-        "4": { name: "吟遊詩人の竪琴", lat: 35.7000, lng: 139.7000, arUrl: "#", imgUrl: "https://images.unsplash.com/photo-1595066601614-747f48037b52?w=500", description: "ハープはアイルランドの国章です。" },
-        "5": { name: "巨人の道", lat: 35.7100, lng: 139.7100, arUrl: "#", imgUrl: "https://images.unsplash.com/photo-1547432041-319985223030?w=500", description: "不思議な六角形の石柱が並ぶ絶景スポットです。" },
-        "6": { name: "ケルトの結び目", lat: 35.7200, lng: 139.7200, arUrl: "#", imgUrl: "https://images.unsplash.com/photo-1621236304191-382500028400?w=500", description: "永遠を象徴する美しい幾何学文様です。" },
-        "7": { name: "羊の住む丘", lat: 35.7300, lng: 139.7300, arUrl: "#", imgUrl: "https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=500", description: "アラン諸島の伝統的なウール文化を象徴します。" },
-        "8": { name: "スロンチャ！の鐘", lat: 35.7400, lng: 139.7400, arUrl: "#", imgUrl: "https://images.unsplash.com/photo-1559526323-cb2f2fe2591b?w=500", description: "スロンチャはゲール語で「乾杯！」を意味します。" },
-        "9": { name: "守護聖人の書", lat: 35.7500, lng: 139.7500, arUrl: "#", imgUrl: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=500", description: "世界で最も美しい本といわれるケルズの書です。" },
-        "10": { name: "🌈 虹の麓の黄金", lat: 35.7600, lng: 139.7600, arUrl: "#", imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", description: "おめでとう！すべてのスタンプが集まりました！" }
-    };
+        "1": { 
+            name: "三つ葉の広場", lat: 35.7725, lng: 139.6615, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1590076215667-873d3253503a?w=500", 
+            description: "<b>【シャムロック】</b><br>三つ葉のクローバーはアイルランドの国花。聖パトリックがキリスト教を広める際、この葉を使って説明したと言われています。" 
+        },
+        "2": { 
+            name: "妖精の靴屋", lat: 35.6812, lng: 139.7671, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1599839619722-397514112634?w=500", 
+            description: "<b>【レプラコーン】</b><br>一人で黙々と靴を直す妖精。彼を捕まえれば黄金の場所を教えてくれますが、目を離した隙に逃げてしまう知恵者です。" 
+        },
+        "3": { 
+            name: "ダブリンの扉", lat: 35.6924, lng: 139.6971, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1582234032482-628d7a868430?w=500", 
+            description: "<b>【カラフルなドア】</b><br>18世紀から続くダブリンの伝統。隣の家と同じ色にならないように、住人たちが競って鮮やかな色を塗ったのが始まりです。" 
+        },
+        "4": { 
+            name: "吟遊詩人の竪琴", lat: 35.7000, lng: 139.7000, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1595066601614-747f48037b52?w=500", 
+            description: "<b>【アイリッシュ・ハープ】</b><br>アイルランドの国章にもなっている竪琴。かつて吟遊詩人たちが王宮で奏でた美しい旋律は、今も国の魂として愛されています。" 
+        },
+        "5": { 
+            name: "巨人の道", lat: 35.7100, lng: 139.7100, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1547432041-319985223030?w=500", 
+            description: "<b>【ジャイアンツ・コーズウェー】</b><br>火山活動でできた不思議な六角形の石柱群。伝説では、巨人が敵に会いにスコットランドへ渡るために作った道だと言われています。" 
+        },
+        "6": { 
+            name: "ケルトの結び目", lat: 35.7200, lng: 139.7200, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1621236304191-382500028400?w=500", 
+            description: "<b>【永遠のシンボル】</b><br>一筆書きのように途切れない模様は「永遠」や「魂の繋がり」を象徴しています。ケルト文化が誇る、世界で最も美しい幾何学文様です。" 
+        },
+        "7": { 
+            name: "羊の住む丘", lat: 35.7300, lng: 139.7300, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=500", 
+            description: "<b>【アランセーターの故郷】</b><br>アイルランドの西海岸に浮かぶアラン諸島。ここで編まれるセーターの模様には、漁師たちの安全と大漁の願いが込められています。" 
+        },
+        "8": { 
+            name: "スロンチャ！の鐘", lat: 35.7400, lng: 139.7400, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1559526323-cb2f2fe2591b?w=500", 
+            description: "<b>【パブの文化】</b><br>アイルランドのパブは、音楽と会話を楽しむ第2の家。「Sláinte（スロンチャ）」とは「あなたの健康に！」という意味の乾杯の言葉です。" 
+        },
+        "9": { 
+            name: "守護聖人の書", lat: 35.7500, lng: 139.7500, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=500", 
+            description: "<b>【ケルズの書】</b><br>世界で最も美しい本と呼ばれる、中世の豪華な写本。トリニティ・カレッジに保管されているアイルランドの至宝の一つです。" 
+        },
+        "10": { 
+            name: "🌈 虹の麓の黄金", lat: 35.7600, lng: 139.7600, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", 
+            description: "<b>【コンプリート！】</b><br>すべてのスタンプを集め、アイルランドの知恵を学びました！虹の麓に隠された黄金の壺を手にする資格は、あなたの好奇心そのものです。" 
+        }
 
     let map, markers = {};
     const storageKey = 'rally_locked_final_v3';
