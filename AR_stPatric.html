@@ -16,6 +16,9 @@
 
         body { font-family: 'Hiragino Kaku Gothic ProN', sans-serif; background-color: var(--cream); color: var(--dark-green); margin: 0; padding: 10px; }
         .container { max-width: 500px; margin: 0 auto; background: white; border: 4px double var(--gold); border-radius: 15px; padding: 15px; box-sizing: border-box; }
+
+        .title-image-container { text-align: center; margin-bottom: 15px; }
+        .title-image { width: 100%; max-width: 450px; height: auto; border-radius: 10px; border: 3px solid var(--gold); }
         
         #map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); }
 
@@ -50,7 +53,9 @@
 <body>
 
 <div class="container">
-    <h2 style="text-align:center; color:var(--irish-green); margin-top:0;">☘️ Quest Rally</h2>
+    <div class="title-image-container">
+        <img src="https://placehold.co/800x350/009a49/ffcd00?text=Shamrock+Rally&font=playfair-display" alt="Shamrock Rally" class="title-image">
+    </div>
     <div id="map"></div>
     <div id="status">スタンプを集めよう！</div>
     <button class="check-btn" onclick="checkLocation()">現在地でスタンプ！</button>
