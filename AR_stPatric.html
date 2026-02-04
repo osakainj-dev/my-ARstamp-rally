@@ -40,19 +40,19 @@
         .stamp.active::before { content: '☘️'; font-size: 16px; }
         .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
 
-        /* --- モーダルのスタイル（画像対応） --- */
+        * モーダル */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
         .modal-close { position: absolute; top: 5px; right: 10px; font-size: 24px; cursor: pointer; z-index: 10; }
         
-        /* モーダル内画像 */
-        .modal-image { width: 100%; height: 200px; object-fit: cover; border-radius: 5px; border: 2px solid var(--gold); margin-top: 10px; margin-bottom: 15px; display: block; }
+        /* 画像エリアの修正：高さが確保されるように */
+        .modal-image { width: 100%; height: 180px; object-fit: cover; border-radius: 5px; border: 2px solid var(--gold); margin: 10px 0; background: #ddd; display: block; }
         
-        .modal-title { color: var(--irish-green); border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; }
-        .modal-body { line-height: 1.6; font-size: 0.9rem; color: #333; }
+        .modal-title { color: var(--irish-green); border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin: 0; font-size: 1.2rem; }
+        .modal-body { line-height: 1.6; font-size: 0.9rem; color: #333; margin-top: 10px; }
 
         #status { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
-        .custom-marker { font-size: 26px; text-align: center; }
+        
     </style>
 </head>
 <body>
@@ -127,8 +127,8 @@
         }
     };
 
-    let map, userMarker, markers = {};
-    const storageKey = 'rally_stpatty_full_v1';
+    let map, markers = {};
+    const storageKey = 'rally_v2_fix';
 
     function init() {
         const gridMain = document.getElementById('stamp-grid-main');
@@ -138,39 +138,43 @@
             const div = document.createElement('div');
             div.id = `stamp-${i}`;
             div.className = (i === 10) ? 'stamp goal' : 'stamp';
-            div.innerHTML = `
-                <span>${targets[i].name}</span>
-                <div class="btn-ui detail-btn" onclick="openModal('${i}')">🔍 解説を読む</div>
-                <a href="${targets[i].arUrl}" id="ar-link-${i}" class="btn-ui ar-btn" target="_blank">☘️ Open AR!</a>
-            `;
-            if (i <= 9) gridMain.appendChild(div);
-            else goalArea.appendChild(div);
+            div.innerHTML = `<span>${targets[i].name}</span><div class="btn-ui detail-btn" onclick="openModal('${i}')">🔍 解説</div><a href="${targets[i].arUrl}" id="ar-link-${i}" class="btn-ui ar-btn" target="_blank">☘️ AR</a>`;
+            if (i <= 9) gridMain.appendChild(div); else goalArea.appendChild(div);
         }
 
         map = L.map('map').setView([targets["1"].lat, targets["1"].lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
+        // --- ピンの設置 ---
         for (let id in targets) {
             markers[id] = L.marker([targets[id].lat, targets[id].lng], {
                 icon: L.divIcon({ className: 'custom-marker', html: (id=="10"?'🚩':'📍'), iconSize: [30, 30] })
-            }).addTo(map);
+            }).addTo(map).bindPopup(targets[id].name); // ここで名前をバインド
         }
-        userMarker = L.circleMarker([0,0], { color: '#007bff', radius: 7 }).addTo(map);
-
         updateDisplay();
-        if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(pos => {
-                userMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
-            }, null, { enableHighAccuracy: true });
-        }
     }
 
     function openModal(id) {
         document.getElementById('modalTitle').innerText = targets[id].name;
+        document.getElementById('modalImg').src = targets[id].imgUrl;
         document.getElementById('modalBody').innerHTML = targets[id].description;
         document.getElementById('infoModal').style.display = 'flex';
     }
     function closeModal() { document.getElementById('infoModal').style.display = 'none'; }
+
+    function updateDisplay() {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        stamps.forEach(id => {
+            document.getElementById("stamp-" + id)?.classList.add("active");
+            document.getElementById("ar-link-" + id).style.display = "block";
+            if (markers[id]) {
+                // アイコンを更新してもポップアップが消えないように、既存のマーカーのアイコンだけを差し替え
+                let iconHtml = (id=="10"?'🌈':'☘️');
+                markers[id].setIcon(L.divIcon({ className: 'custom-marker', html: iconHtml, iconSize: [30, 30] }));
+            }
+        });
+        document.getElementById("status").innerText = `スタンプ: ${stamps.length} / 10`;
+    }
 
     function checkLocation() {
         navigator.geolocation.getCurrentPosition(pos => {
@@ -180,35 +184,13 @@
                 const dist = getDistance(latitude, longitude, targets[id].lat, targets[id].lng);
                 if (dist < 0.5) { saveStamp(id); found = true; }
             }
-            if (found) { updateDisplay(); alert("☘️ スタンプ獲得！"); }
-            else alert("近くにスポットがありません。");
+            if (found) { updateDisplay(); alert("☘️ スタンプ！"); } else alert("近くにありません。");
         });
     }
 
-    function getDistance(lat1, lng1, lat2, lng2) {
-        const R = 6371;
-        const dLat=(lat2-lat1)*Math.PI/180; const dLng=(lng2-lng1)*Math.PI/180;
-        const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-        return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-    }
+    function getDistance(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+    function saveStamp(id){let stamps=JSON.parse(localStorage.getItem(storageKey))||[];if(!stamps.includes(id)){stamps.push(id);localStorage.setItem(storageKey,JSON.stringify(stamps));}}
 
-    function saveStamp(id) {
-        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
-        if (!stamps.includes(id)) { stamps.push(id); localStorage.setItem(storageKey, JSON.stringify(stamps)); }
-    }
-
-    function updateDisplay() {
-        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
-        stamps.forEach(id => {
-            document.getElementById("stamp-" + id)?.classList.add("active");
-            const arLnk = document.getElementById("ar-link-" + id);
-            if (arLnk) arLnk.style.display = "block";
-            if (markers[id]) {
-                markers[id].setIcon(L.divIcon({ className: 'custom-marker', html: (id=="10"?'🌈':'☘️'), iconSize: [30, 30] }));
-            }
-        });
-        document.getElementById("status").innerText = `スタンプ: ${stamps.length} / 10`;
-    }
     window.onload = init;
 </script>
 </body>
