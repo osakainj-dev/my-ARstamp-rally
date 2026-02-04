@@ -59,6 +59,12 @@
     <div class="title-image-container">
         <img src="./logo.png" alt="Shamrock Rally Logo" class="title-image">
     </div>
+
+    <p class="description">
+        街を歩いてアイルランドの知恵を集めよう！<br>
+        「🔍詳細」で場所の由来や豆知識をチェック。<br>
+        目的地に着いたらスタンプを押してAR体験！
+    </p>
     
     <div id="map"></div>
     <div id="status">スタンプを集めよう！</div>
@@ -197,7 +203,8 @@
         }
         document.getElementById("status").innerText = `集めたスタンプ: ${mainCount} / 9`;
     }
-
+    
+// ロケーション判定
     function checkLocation() {
         navigator.geolocation.getCurrentPosition(pos => {
             const { latitude, longitude } = pos.coords;
@@ -206,13 +213,13 @@
             let foundId = null;
             for (let id in targets) {
                 const dist = getDistance(latitude, longitude, targets[id].lat, targets[id].lng);
-                if (dist < 0.5) {
+                if (dist < 0.05) {
                     if (id == "10" && mainCount < 9) { alert("まだゴールは開いていません！"); return; }
                     foundId = id; break;
                 }
             }
-            if (foundId) { saveStamp(foundId); updateDisplay(); alert("スタンプ獲得！"); }
-            else alert("近くにありません。");
+            if (foundId) { saveStamp(foundId); updateDisplay(); alert("☘️ おめでとう！スタンプをゲット！"); }
+            else alert("近くにスポットがありません。地図の📍を目指してね");
         });
     }
 
