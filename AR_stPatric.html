@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>St. Patrick's 10 Spot Rally</title>
+    <title>St. Patrick's Rally Fix</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
@@ -24,23 +24,20 @@
 
         .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; }
 
-        /* スタンプ台レイアウト */
         .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
         .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; }
         .stamp.goal { width: 70%; border: 3px double var(--gold); background: #fffdf0; min-height: 140px; }
         .goal-container { margin-top: 10px; display: flex; justify-content: center; }
         .stamp span { font-size: 10px; font-weight: bold; margin-bottom: 5px; min-height: 28px; display: flex; align-items: center; justify-content: center; }
         
-        /* ボタン */
         .btn-ui { display: block; width: 90%; padding: 6px 0; margin: 2px 0; border-radius: 4px; font-size: 9px; font-weight: bold; text-decoration: none; text-align: center; cursor: pointer; }
         .detail-btn { background: white; color: var(--dark-green); border: 1px solid var(--gold); }
         .ar-btn { background: var(--irish-green); color: white; border: none; display: none; }
 
         .stamp.active { border-style: solid; background: #e8f5e9; }
         .stamp.active::before { content: '☘️'; font-size: 16px; }
-        .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
 
-        * モーダル */
+        /* モーダル */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
         .modal-close { position: absolute; top: 5px; right: 10px; font-size: 24px; cursor: pointer; z-index: 10; }
@@ -52,14 +49,14 @@
         .modal-body { line-height: 1.6; font-size: 0.9rem; color: #333; margin-top: 10px; }
 
         #status { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
-        
+        .custom-marker { font-size: 26px; text-align: center; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="title-image-container">
-        <img src="https://placehold.co/800x350/009a49/ffcd00?text=Shamrock+Rally&font=playfair-display" alt="Shamrock Rally" class="title-image">
+        <h1 id="main-title" style="color:var(--irish-green); margin:0;">☘️ Shamrock Rally</h1>
     </div>
     
     <div id="map"></div>
@@ -74,9 +71,11 @@
     <div class="modal-content" onclick="event.stopPropagation()">
         <span class="modal-close" onclick="closeModal()">&times;</span>
         <h2 id="modalTitle" class="modal-title"></h2>
+        <img id="modalImg" class="modal-image" src="" alt="Spot Image">
         <div id="modalBody" class="modal-body"></div>
     </div>
 </div>
+
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
