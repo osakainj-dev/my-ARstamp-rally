@@ -167,14 +167,26 @@
         stamps.forEach(id => {
             if(id == "10") return;
             document.getElementById("stamp-" + id)?.classList.add("active");
-            document.getElementById("ar-link-" + id).style.display = "block";
+            
+            const arLnk = document.getElementById("ar-link-" + id);
+            if (arLnk) {
+                arLnk.href = targets[id].arUrl; // targetsデータからURLをセット
+                arLnk.style.display = "block";  // ボタンを表示
+            }
+            
             markers[id].setIcon(L.divIcon({ className:'custom-marker', html:'☘️', iconSize:[30,30] }));
         });
         const goalEl = document.getElementById("stamp-10");
         if (mainCount >= 9) {
             goalEl.classList.add("ready");
             document.getElementById("goal-name").innerText = targets["10"].name;
-            document.getElementById("goal-btns").style.display = "block";
+            
+            const arLnk = document.getElementById("ar-link-" + id);
+            if (arLnk) {
+                arLnk.href = targets[id].arUrl; // targetsデータからURLをセット
+                arLnk.style.display = "block";  // ボタンを表示
+            }
+            
             markers["10"].setIcon(L.divIcon({ className:'custom-marker', html:'🚩', iconSize:[30,30] }));
             markers["10"].getPopup().setContent(targets["10"].name);
         }
