@@ -2,40 +2,53 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>St. Patrick's Giant AR Flyby</title>
+    <title>AR Sky Parade: Whale Shark</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
   </head>
 
   <body style="margin: 0; overflow: hidden;">
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-scene 
+      embedded 
+      arjs="sourceType: webcam; debugUIEnabled: false;" 
+      vr-mode-ui="enabled: false">
       
-      <a-scene 
-        embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;"
-        vr-mode-ui="enabled: false">
+      <a-assets>
+        <a-asset-item id="shark-model" src="./whale_shark_fantasy.glb"></a-asset-item>
         
-        <a-entity 
-          position="0 15 -100" 
-          animation="property: position; to: 0 15 200; dur: 25000; easing: linear; loop: true">
-          
-          <a-sphere scale="10 4 4" color="#ffffff"></a-sphere>
-          <a-box position="0 -2.5 0" width="2" height="1" depth="4" color="#333"></a-box>
-        </a-entity>
-      
-        <a-entity camera look-controls></a-entity>
-      </a-scene>
+        <audio id="pass-sound" src="./ambient_ocean.mp3" preload="auto"></audio>
 
-        <a-light type="point" intensity="1" distance="30"></a-light>
+        <a-mixin id="move-logic" 
+          animation__pos="property: position; from: 0 20 -150; to: 0 20 300; dur: 35000; easing: linear; loop: true"
+          animation__sway="property: rotation; from: -5 0 -5; to: 5 0 5; dur: 3000; dir: alternate; loop: true">
+        </a-mixin>
+      </a-assets>
+
+      <a-entity mixin="move-logic" gltf-model="#shark-model" scale="5 5 5" animation__pos="delay: 0">
+        <a-entity sound="src: #pass-sound; autoplay: true; loop: true; volume: 1; refDistance: 20; rolloffFactor: 5"></a-entity>
       </a-entity>
 
-      <a-entity camera></a-entity>
+      <a-entity mixin="move-logic" gltf-model="#shark-model" scale="4 4 4" 
+        position="15 15 -150" 
+        animation__pos="from: 15 15 -150; to: 15 15 300; delay: 8000">
+      </a-entity>
+
+      <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
-   <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10;">
-      <button onclick="history.back()" style="padding: 15px 30px; font-size: 18px; background: #009a49; color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 #00622d;">
-        ☘️ スタンプ台帳に戻る
-      </button>
-      </p>
+
+    <div id="overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999;">
+        <h2>St. Patrick's Sky Parade</h2>
+        <p>画面をタップしてパレードを開始！</p>
+        <button onclick="startExperience()" style="padding: 15px 30px; font-size: 20px; background: #009a49; border: none; color: white; border-radius: 10px;">☘️ 参加する</button>
     </div>
+
+    <script>
+      function startExperience() {
+        document.getElementById('overlay').style.display = 'none';
+        // ブラウザの音信制限を解除するため、タップ時に音を再生
+        const scene = document.querySelector('a-scene');
+        scene.components.sound.playSound(); // シーン全体の音を有効化
+      }
+    </script>
   </body>
 </html>
