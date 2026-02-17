@@ -15,6 +15,9 @@
       // 含まれていたら非表示にする
       const nodeName = node.name.toLowerCase();
       if (
+        nodeName.includes('particles_0')
+        nodeName.includes('particles_1')
+        nodeName.includes('particles_2')
         nodeName.includes('ocean')
       ) {
         node.visible = false; // 表示をオフにする
