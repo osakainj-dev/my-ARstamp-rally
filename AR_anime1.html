@@ -15,12 +15,7 @@
       // 含まれていたら非表示にする
       const nodeName = node.name.toLowerCase();
       if (
-        nodeName.includes('ground') || 
-        nodeName.includes('sea') || 
-        nodeName.includes('plane') || 
-        nodeName.includes('sand') ||
-        nodeName.includes('floor') ||
-        nodeName.includes('water')
+        nodeName.includes('ocean')
       ) {
         node.visible = false; // 表示をオフにする
       }
