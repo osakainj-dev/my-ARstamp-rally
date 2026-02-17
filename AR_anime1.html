@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>St. Patrick's Giant AR Flyby</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  </head>
+
+  <body style="margin: 0; overflow: hidden;">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+      
+      <a-assets>
+        </a-assets>
+
+      <a-entity 
+        position="0 20 -100" 
+        animation="property: position; to: 0 20 100; dur: 10000; easing: linear; loop: true">
+        
+        <a-entity scale="5 5 5">
+          <a-sphere position="0.6 0 0" color="#009a49" radius="0.5"></a-sphere>
+          <a-sphere position="-0.6 0 0" color="#009a49" radius="0.5"></a-sphere>
+          <a-sphere position="0 0.8 0" color="#009a49" radius="0.5"></a-sphere>
+          <a-box position="0 -0.5 0" width="0.2" height="1" depth="0.2" color="#00622d"></a-box>
+        </a-entity>
+        
+        <a-light type="point" intensity="2" distance="50" color="#ffcd00"></a-light>
+      </a-entity>
+
+      <a-entity camera></a-entity>
+
+    </a-scene>
+
+    <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10;">
+      <button onclick="history.back()" style="padding: 15px 30px; font-size: 18px; background: #009a49; color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 #00622d;">
+        ☘️ スタンプ台帳に戻る
+      </button>
+    </div>
+  </body>
+</html>
