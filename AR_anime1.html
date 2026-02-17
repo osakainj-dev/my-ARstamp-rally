@@ -6,16 +6,26 @@
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <script>
-  // モデルが読み込まれたら実行されるイベント
+  // シーン全体でモデルが読み込まれるのを待つ
   document.querySelector('a-scene').addEventListener('model-loaded', (e) => {
     const model = e.detail.model;
+    
     model.traverse((node) => {
-      // "shadow", "plane", "ground" という名前が含まれるパーツを隠す
-      if (node.name.toLowerCase().includes('shadow') || 
-          node.name.toLowerCase().includes('plane')) {
-        node.visible = false;
+      // パーツ名に「ground（地面）」「sea（海）」「plane（板）」「sand（砂）」などが
+      // 含まれていたら非表示にする
+      const nodeName = node.name.toLowerCase();
+      if (
+        nodeName.includes('ground') || 
+        nodeName.includes('sea') || 
+        nodeName.includes('plane') || 
+        nodeName.includes('sand') ||
+        nodeName.includes('floor') ||
+        nodeName.includes('water')
+      ) {
+        node.visible = false; // 表示をオフにする
       }
     });
+    console.log("余計なパーツを非表示にしました");
   });
 </script>
   </head>
