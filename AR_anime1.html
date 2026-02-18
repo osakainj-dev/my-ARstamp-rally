@@ -47,25 +47,19 @@
       </a-assets>
       
       <a-entity 
-        mixin="move-logic" 
-        gltf-model="#shark-model" 
-        scale="5 5 5" 
-        rotation="0 180 0"
-        class="clickable"
-        gesture-handler="minScale: 0.0001; maxScale: 10"
-        animation__pos="delay: 0">
+      gltf-model="#shark-model" 
+      class="clickable"
+      gesture-handler="minScale: 0.0001; maxScale: 10"
+      mixin="move-logic">
       </a-entity>
-      
+
       <a-entity 
-        mixin="move-logic" 
         gltf-model="#balloon-model" 
-        scale="0.05 0.05 0.05"
-        position="5 22 -150"
         class="clickable"
         gesture-handler="minScale: 0.0001; maxScale: 10"
-        Animation="property: position; from: 5 20 -500; to: 5 20 500; dur: 40000; easing: linear; loop: true; delay: 8000"
-        rotation="0 0 0">
-    </a-entity>
+        position="5 20 -150"
+        animation="property: position; from: 5 20 -150; to: 5 20 300; dur: 35000; easing: linear; loop: true; delay: 8000">
+      </a-entity>
             
       <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
