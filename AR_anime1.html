@@ -35,25 +35,30 @@
       vr-mode-ui="enabled: false">
       
       <a-assets>
-        <a-asset-item id="shark-model" src="./peachy_balloon_gift.glb"></a-asset-item>
-        
-        <audio id="pass-sound" src="./ambient_ocean.mp3" preload="auto"></audio>
-
+        <a-asset-item id="shark-model" src="./whale_shark.glb"></a-asset-item>
+        <a-asset-item id="balloon-model" src="./peachy_balloon_gift.glb"></a-asset-item>
+      
         <a-mixin id="move-logic" 
-          animation__pos="property: position; from: 0 20 -150; to: 0 20 300; dur: 35000; easing: linear; loop: true"
-          animation__sway="property: rotation; from: -5 0 -5; to: 5 0 5; dur: 3000; dir: alternate; loop: true">
+          animation__pos="property: position; from: 0 20 -150; to: 0 20 300; dur: 35000; easing: linear; loop: true">
         </a-mixin>
       </a-assets>
-
-      <a-entity mixin="move-logic" gltf-model="#shark-model" scale="5 5 5" animation__pos="delay: 0">
-        <a-entity sound="src: #pass-sound; autoplay: true; loop: true; volume: 1; refDistance: 20; rolloffFactor: 5"></a-entity>
+      
+      <a-entity 
+        mixin="move-logic" 
+        gltf-model="#shark-model" 
+        scale="5 5 5" 
+        rotation="0 180 0"
+        animation__pos="delay: 0">
       </a-entity>
-
-      <a-entity mixin="move-logic" gltf-model="#shark-model" scale="4 4 4" 
-        position="15 15 -150" 
-        animation__pos="from: 15 15 -150; to: 15 15 300; delay: 8000">
+      
+      <a-entity 
+        mixin="move-logic" 
+        gltf-model="#balloon-model" 
+        scale="3 3 3" 
+        position="5 22 -150"
+        animation__pos="from: 5 22 -150; to: 5 22 300; delay: 8000">
       </a-entity>
-
+            
       <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
 
