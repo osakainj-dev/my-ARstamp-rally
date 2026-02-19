@@ -37,11 +37,11 @@
       id="shark"
       gltf-model="#shark-model" 
       class="clickable"
-      scale="5 5 5" 
+      scale="7 7 7" 
       gesture-handler
       animation="property: position; 
-                 from: -10 30 -200;  /* バルーンより50先（前）からスタート */
-                 to: -10 30 400;     /* ゴールも50先に設定 */
+                 from: -10 30 -150;  /* バルーンより100先（前）からスタート */
+                 to: -10 30 450;     /* ゴールも50先に設定 */
                  dur: 60000; 
                  easing: linear; 
                  loop: true;
@@ -51,10 +51,10 @@
       id="balloon"
       gltf-model="#balloon-model" 
       class="clickable"
-      scale="0.02 0.02 0.02" 
+      scale="0.03 0.03 0.03" 
       gesture-handler
       animation="property: position; 
-                 from: 10 20 -250;   /* サメより50後ろからスタート */
+                 from: 10 20 -250;   /* サメより100後ろからスタート */
                  to: 10 20 350;      /* ゴール */
                  dur: 60000;         /* サメと同じ速度 */
                  easing: linear; 
