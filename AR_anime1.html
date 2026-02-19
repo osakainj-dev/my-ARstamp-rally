@@ -62,10 +62,10 @@
             const nodeName = node.name.toLowerCase();
             // 不要なパーツを隠す
             if (
-              nodeName.includes('particles') ||
-              nodeName.includes('ocean') ||
-              nodeName.includes('plane') ||
-              nodeName.includes('ground')
+                nodeName.includes('particles_0')||
+                nodeName.includes('particles_1')||
+                nodeName.includes('particles_2')||
+                nodeName.includes('ocean_0')
             ) {
               node.visible = false;
             }
