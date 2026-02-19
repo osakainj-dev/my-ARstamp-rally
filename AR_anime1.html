@@ -14,53 +14,46 @@
       embedded 
       arjs="sourceType: webcam; debugUIEnabled: false;" 
       vr-mode-ui="enabled: false"
-      gesture-detector>
+      gesture-detector
+      raycaster="objects: .clickable"
+      cursor="fuse: false; rayOrigin: mouse">
       
       <a-assets>
         <a-asset-item id="shark-model" src="./whale_shark_fantasy.glb"></a-asset-item>
         <a-asset-item id="balloon-model" src="./peachy_balloon_gift-v1.glb"></a-asset-item>
-      
-        <a-mixin id="move-logic"
-          animation__pos="property: position; from: 0 20 -150; to: 0 20 300; dur: 35000; easing: linear; loop: true">
-        </a-mixin>
       </a-assets>
-      
-    <a-scene 
-      embedded 
-      arjs="sourceType: webcam; debugUIEnabled: false;" 
-      vr-mode-ui="enabled: false"
-      gesture-detector
-      raycaster="objects: .clickable"
-      cursor="fuse: false; rayOrigin: mouse">
-        
-    <a-entity 
-      id="shark"
-      gltf-model="#shark-model" 
-      class="clickable"
-      scale="7 7 7" 
-      gesture-handler
-      animation="property: position; 
-                 from: -10 30 -150;  /* バルーンより100先（前）からスタート */
-                 to: -10 30 450;     /* ゴールも50先に設定 */
-                 dur: 60000; 
-                 easing: linear; 
-                 loop: true;
-                 delay: 0"> </a-entity>
+
+      <a-entity 
+        id="shark"
+        gltf-model="#shark-model" 
+        class="clickable"
+        scale="7 7 7" 
+        gesture-handler
+        animation-mixer
+        animation="property: position; 
+                   from: -10 30 -150; 
+                   to: -10 30 450; 
+                   dur: 60000; 
+                   easing: linear; 
+                   loop: true;
+                   autoplay: true">
+      </a-entity>
     
-    <a-entity 
-      id="balloon"
-      gltf-model="#balloon-model" 
-      class="clickable"
-      scale="0.03 0.03 0.03" 
-      gesture-handler
-      animation="property: position; 
-                 from: 10 20 -250;   /* サメより100後ろからスタート */
-                 to: 10 20 350;      /* ゴール */
-                 dur: 60000;         /* サメと同じ速度 */
-                 easing: linear; 
-                 loop: true; 
-                 delay: 0"> </a-entity>
-                
+      <a-entity 
+        id="balloon"
+        gltf-model="#balloon-model" 
+        class="clickable"
+        scale="0.03 0.03 0.03" 
+        gesture-handler
+        animation-mixer
+        animation="property: position; 
+                   from: 10 20 -250; 
+                   to: 10 20 350; 
+                   dur: 60000; 
+                   easing: linear; 
+                   loop: true; 
+                   autoplay: true">
+      </a-entity>
     <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
 
