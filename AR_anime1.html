@@ -37,12 +37,13 @@
       class="clickable"
       scale="10 10 10" 
       gesture-handler
-      animation="property: position; 
-                 from: -10 30 -250; 
-                 to: -10 30 350; 
-                 dur: 10000;      easing: linear; 
+    　animation="property: position; 
+                 from: -10 30 -200;  /* バルーンより50先（前）からスタート */
+                 to: -10 30 400;     /* ゴールも50先に設定 */
+                 dur: 60000; 
+                 easing: linear; 
                  loop: true;
-                 delay: 0">       </a-entity>
+                 delay: 0"> </a-entity>
     
     <a-entity 
       id="balloon"
@@ -51,12 +52,13 @@
       scale="0.02 0.02 0.02" 
       gesture-handler
       position="10 20 -250"
-      animation="property: position; 
-                 from: 10 20 -350; 
-                 to: 10 20 350; 
-                 dur: 10000;      easing: linear; 
+    　animation="property: position; 
+                 from: 10 20 -250;   /* サメより50後ろからスタート */
+                 to: 10 20 350;      /* ゴール */
+                 dur: 60000;         /* サメと同じ速度 */
+                 easing: linear; 
                  loop: true; 
-                 delay: 20000">   </a-entity>
+                 delay: 0"> </a-entity>
                 
       <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
