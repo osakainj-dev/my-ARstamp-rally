@@ -18,16 +18,19 @@
         }
 
         body { font-family: 'Hiragino Kaku Gothic ProN', sans-serif; background-color: var(--cream); color: var(--dark-green); margin: 0; padding: 10px; }
-        .container { max-width: 500px; margin: 0 auto; background: white; border: 4px double var(--gold); border-radius: 15px; padding: 15px; box-sizing: border-box; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border: 4px double var(--gold); border-radius: 15px; padding: 15px; box-sizing: border-box; position: relative; }
 
         .title-image-container { text-align: center; margin-bottom: 15px; width: 100%; }
         .title-image { width: 100%; height: auto; max-width: 450px; display: block; margin: 0 auto; border-radius: 10px; cursor: pointer; }
 
-        #map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); }
+        #map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); background: #eee; }
         .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; }
         
+        /* ユーザー用リフレッシュボタン */
+        .refresh-ui-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: white; border: 2px solid var(--gold); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 999; cursor: pointer; }
+
         .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-        .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; font-size: 12px; }
+        .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; font-size: 11px; }
         .stamp.goal { width: 75%; border: 3px double #ccc; background: #eee; min-height: 140px; color: #999; margin: 0 auto; }
         .stamp.goal.ready { border-color: var(--gold); background: #fffdf0; color: var(--dark-green); }
         .goal-container { margin-top: 10px; text-align: center; }
@@ -40,13 +43,10 @@
         .stamp.active::before { content: '☘️'; font-size: 16px; }
         .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
 
-        /* 管理者パネル */
         #admin-panel { display: none; background: #333; color: white; padding: 15px; margin-top: 20px; border-radius: 10px; font-size: 12px; }
         .admin-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
         .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 10px; cursor: pointer; }
-        .admin-btn.danger { background: #a22; }
-        .admin-btn.success { background: #007bff; }
-        #coords-output { width: 100%; height: 100px; margin-top: 10px; display: none; font-size: 8px; background: #000; color: #0f0; border: 1px solid #333; }
+        #coords-output { width: 100%; height: 80px; margin-top: 10px; display: none; font-size: 8px; background: #000; color: #0f0; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
@@ -60,12 +60,12 @@
 
 <div class="container">
     <div class="title-image-container">
-        <img src="./logo.png" alt="Logo" class="title-image" id="logo-img" onclick="adminTrigger()">
+        <img src="./logo.png" alt="Logo" class="title-image" onclick="adminTrigger()">
     </div>
 
-    <div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
+    <div style="text-align: center; padding: 10px; font-size: 0.85rem; line-height: 1.4; color: var(--dark-green);">
         <p style="margin: 0; font-weight: bold;">街を巡ってARスタンプを集めよう！</p>
-        <p style="margin: 5px 0 0 0;">知恵をコンプリートして、<br>虹の麓に隠されたゴールを目指せ！☘️</p>
+        <p style="margin: 4px 0 0 0;">知恵を集めて、虹の麓のゴールへ☘️</p>
     </div>
     
     <div id="map"></div>
@@ -76,30 +76,29 @@
     <div class="goal-container" id="goal-area"></div>
 
     <div id="admin-panel">
-        <strong>🔧 現場座標調整・出力モード</strong><br>
+        <strong>🔧 管理者モード</strong><br>
         <span id="current-gps-info">GPS取得中...</span>
         <div class="admin-ctrl" id="admin-buttons"></div>
-        <hr style="border:0; border-top:1px solid #555; margin:10px 0;">
-        <div class="admin-ctrl">
-            <button class="admin-btn success" onclick="exportCoords()">📋 設定値を書き出す</button>
-            <button class="admin-btn" onclick="location.reload()">🔄 ページを再読み込み</button>
-        </div>
+        <button class="admin-btn" style="width:100%; margin-top:10px; background:#007bff;" onclick="exportCoords()">📋 設定値を書き出す</button>
         <textarea id="coords-output" readonly></textarea>
-        <button class="admin-btn danger" style="width:100%; margin-top:10px;" onclick="resetAdminCoords()">全調整をリセット</button>
+        <button class="admin-btn" style="width:100%; margin-top:10px; background:#a22;" onclick="resetAdminCoords()">全リセット</button>
     </div>
 </div>
+
+<div class="refresh-ui-btn" onclick="location.reload()" title="画面を更新">🔄</div>
 
 <div id="infoModal" class="modal-overlay" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <span class="modal-close" onclick="closeModal()">&times;</span>
-        <h2 id="modalTitle" class="modal-title"></h2>
-        <img id="modalImg" class="modal-image" src="" alt="">
-        <div id="modalBody" class="modal-body"></div>
+        <h2 id="modalTitle" style="margin-top:0;"></h2>
+        <img id="modalImg" class="modal-image" src="">
+        <div id="modalBody"></div>
     </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// 全スポットのデータ（スポット1のみ複数座標対応版）
+   // 全スポットのデータ（スポット1のみ複数座標対応版）
     const targets = {
         "1": { 
             name: "三つ葉の広場", 
@@ -176,23 +175,18 @@
     };
 
     let map, markers = {};
-    const storageKey = 'rally_locked_v14'; 
+    const storageKey = 'rally_v15_fast'; 
     const GOAL_ID = "13"; 
     const REQUIRED_COUNT = 9; 
     let tapCount = 0;
     let currentLat, currentLng;
 
-    // 保存された座標の上書き適用
     function applyAdminOffsets() {
         const customCoords = JSON.parse(localStorage.getItem('admin_coords')) || {};
         for (let id in customCoords) {
             if (targets[id]) {
-                if (customCoords[id].locations) {
-                    targets[id].locations = customCoords[id].locations;
-                } else {
-                    targets[id].lat = customCoords[id].lat;
-                    targets[id].lng = customCoords[id].lng;
-                }
+                if (customCoords[id].locations) targets[id].locations = customCoords[id].locations;
+                else { targets[id].lat = customCoords[id].lat; targets[id].lng = customCoords[id].lng; }
             }
         }
     }
@@ -207,10 +201,9 @@
             const id = String(i);
             const div = document.createElement('div');
             div.id = `stamp-${id}`;
-            
             if (id === GOAL_ID) {
                 div.className = 'stamp goal';
-                div.innerHTML = `<span id="goal-name">🔒 ${REQUIRED_COUNT}個集めて解放</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-${id}" target="_blank">☘️ AR</a></div>`;
+                div.innerHTML = `<span id="goal-name">🔒 ${REQUIRED_COUNT}個で解放</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-${id}" target="_blank">☘️ AR</a></div>`;
                 goalArea.appendChild(div);
             } else {
                 div.className = 'stamp';
@@ -218,197 +211,110 @@
                 gridMain.appendChild(div);
             }
 
-            // 管理者用ボタン生成
             if (id === "1") {
                 ["A", "B", "C"].forEach((label, idx) => {
-                    const abtn = document.createElement('button');
-                    abtn.className = 'admin-btn';
-                    abtn.innerText = `[1-${label}]を設定`;
-                    abtn.onclick = () => saveCurrentLocation(id, idx);
-                    adminBtnContainer.appendChild(abtn);
+                    const b = document.createElement('button'); b.className='admin-btn'; b.innerText=`[1-${label}]設定`;
+                    b.onclick=()=>saveLoc(id, idx); adminBtnContainer.appendChild(b);
                 });
             } else {
-                const abtn = document.createElement('button');
-                abtn.className = 'admin-btn';
-                abtn.innerText = `[${id}]を設定`;
-                abtn.onclick = () => saveCurrentLocation(id);
-                adminBtnContainer.appendChild(abtn);
+                const b = document.createElement('button'); b.className='admin-btn'; b.innerText=`[${id}]設定`;
+                b.onclick=()=>saveLoc(id); adminBtnContainer.appendChild(b);
             }
         }
         
-        // 地図初期化
+        // 軽量タイルサーバーに変更
         const center = targets["1"].locations ? targets["1"].locations[0] : targets["1"];
-        map = L.map('map').setView([center.lat, center.lng], 13);
-       // 【修正後：軽量で読み込みが早いタイルに変更】
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '© OpenStreetMap contributors © CARTO',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(map);
+        map = L.map('map', { zoomSnap: 0.5 }).setView([center.lat, center.lng], 14);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '©CARTO', subdomains: 'abcd', maxZoom: 19
+        }).addTo(map);
 
-        // マーカー設置
         for (let id in targets) {
             markers[id] = [];
             const isGoal = (id == GOAL_ID);
-            const iconHtml = isGoal ? '🔒' : '📍';
-            
             if (targets[id].locations) {
                 targets[id].locations.forEach(loc => {
-                    const m = L.marker([loc.lat, loc.lng], {
-                        icon: L.divIcon({ className:'custom-marker', html:iconHtml, iconSize:[30,30] })
-                    }).addTo(map).bindPopup(targets[id].name);
-                    markers[id].push(m);
+                    markers[id].push(L.marker([loc.lat, loc.lng], {icon: L.divIcon({className:'custom-marker', html:'📍', iconSize:[30,30]})}).addTo(map));
                 });
             } else {
-                const m = L.marker([targets[id].lat, targets[id].lng], {
-                    icon: L.divIcon({ className:'custom-marker', html:iconHtml, iconSize:[30,30] })
-                }).addTo(map).bindPopup(isGoal ? `${REQUIRED_COUNT}個集めると解放！` : targets[id].name);
-                markers[id].push(m);
+                markers[id].push(L.marker([targets[id].lat, targets[id].lng], {icon: L.divIcon({className:'custom-marker', html:isGoal?'🔒':'📍', iconSize:[30,30]})}).addTo(map));
             }
         }
         updateDisplay();
-        startGpsTracking();
+        startGps();
+    }
+
+    function startGps() {
+        const opt = { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 };
+        navigator.geolocation.getCurrentPosition(pos => {
+            currentLat = pos.coords.latitude; currentLng = pos.coords.longitude;
+            document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+        }, null, { timeout: 5000 });
+        navigator.geolocation.watchPosition(pos => {
+            currentLat = pos.coords.latitude; currentLng = pos.coords.longitude;
+            document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+        }, null, opt);
+    }
+
+    function checkLocation() {
+        if (!currentLat) { alert("GPS信号を取得中です。少しお待ちください。"); return; }
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const mainCount = stamps.filter(id => id != GOAL_ID).length;
+        let foundId = null;
+
+        for (let id in targets) {
+            const t = targets[id];
+            const isNear = t.locations ? t.locations.some(l => getDist(currentLat, currentLng, l.lat, l.lng) < 0.05) : getDist(currentLat, currentLng, t.lat, t.lng) < 0.05;
+            if (isNear) {
+                if (id == GOAL_ID && mainCount < REQUIRED_COUNT) { alert("まだ知恵が足りません！"); return; }
+                foundId = id; break;
+            }
+        }
+
+        if (foundId) {
+            if (!stamps.includes(foundId)) {
+                stamps.push(foundId); localStorage.setItem(storageKey, JSON.stringify(stamps));
+                updateDisplay(); alert("☘️ スタンプゲット！");
+            } else alert("獲得済みです！");
+        } else alert("近くにスポットがありません。地図の📍を目指してね");
     }
 
     function updateDisplay() {
         let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
         const mainCount = stamps.filter(id => id != GOAL_ID).length;
-        
         stamps.forEach(id => {
-            const el = document.getElementById("stamp-" + id);
-            if(el) el.classList.add("active");
-            const arLnk = document.getElementById("ar-link-" + id);
-            if (arLnk) { arLnk.href = targets[id].arUrl; arLnk.style.display = "block"; }
-            
-            if(id != GOAL_ID) {
-                markers[id].forEach(m => m.setIcon(L.divIcon({ className:'custom-marker', html:'☘️', iconSize:[30,30] })));
-            }
+            document.getElementById("stamp-" + id)?.classList.add("active");
+            const ar = document.getElementById("ar-link-" + id); if(ar){ ar.href = targets[id].arUrl; ar.style.display = "block"; }
+            if(id != GOAL_ID) markers[id].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'☘️', iconSize:[30,30]})));
         });
-
         if (mainCount >= REQUIRED_COUNT) {
-            document.getElementById("stamp-" + GOAL_ID).classList.add("ready");
+            document.getElementById("stamp-"+GOAL_ID).classList.add("ready");
             document.getElementById("goal-name").innerText = targets[GOAL_ID].name;
-            document.getElementById("goal-btns").style.display = "block"; 
-            markers[GOAL_ID][0].setIcon(L.divIcon({ className:'custom-marker', html:'🚩', iconSize:[30,30] }));
+            document.getElementById("goal-btns").style.display = "block";
+            markers[GOAL_ID][0].setIcon(L.divIcon({className:'custom-marker', html:'🚩', iconSize:[30,30]}));
         }
         if (stamps.includes(GOAL_ID)) {
-            document.getElementById("stamp-" + GOAL_ID).classList.add("active");
-            markers[GOAL_ID][0].setIcon(L.divIcon({ className:'custom-marker', html:'🌈', iconSize:[30,30] }));
+            document.getElementById("stamp-"+GOAL_ID).classList.add("active");
+            markers[GOAL_ID][0].setIcon(L.divIcon({className:'custom-marker', html:'🌈', iconSize:[30,30]}));
         }
-        document.getElementById("status").innerText = `集めたスタンプ: ${mainCount} / ${REQUIRED_COUNT}`;
+        document.getElementById("status").innerText = `集めた数: ${mainCount} / ${REQUIRED_COUNT}`;
     }
 
-    function checkLocation() {
-        navigator.geolocation.getCurrentPosition(pos => {
-            const { latitude, longitude } = pos.coords;
-            let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
-            const mainCount = stamps.filter(id => id != GOAL_ID).length;
-            let foundId = null;
-
-            for (let id in targets) {
-                const target = targets[id];
-                const isNear = target.locations 
-                    ? target.locations.some(loc => getDistance(latitude, longitude, loc.lat, loc.lng) < 0.05)
-                    : getDistance(latitude, longitude, target.lat, target.lng) < 0.05;
-
-                if (isNear) {
-                    if (id == GOAL_ID && mainCount < REQUIRED_COUNT) { alert("まだゴールは開いていません！"); return; }
-                    foundId = id; break;
-                }
-            }
-
-            if (foundId) {
-                if (!stamps.includes(foundId)) {
-                    stamps.push(foundId);
-                    localStorage.setItem(storageKey, JSON.stringify(stamps));
-                    updateDisplay();
-                    alert("☘️ おめでとう！スタンプゲット！");
-                } else { alert("ここは獲得済みです！"); }
-            } else { alert("近くにスポットがありません。地図の📍を目指してね"); }
-        }, err => alert("GPSをオンにしてください"), {enableHighAccuracy: true});
-    }
-
-    // --- 管理機能 ---
-    function adminTrigger() {
-        if (++tapCount >= 5) {
-            document.getElementById('admin-panel').style.display = 'block';
-            window.scrollTo(0, document.body.scrollHeight);
-            tapCount = 0;
-        }
-    }
-
-function startGpsTracking() {
-    const gpsOptions = {
-        enableHighAccuracy: true, // 高精度モード
-        timeout: 10000,           // 10秒でタイムアウト
-        maximumAge: 3000          // 3秒以内のキャッシュなら再利用
-    };
-
-    // 最初の1回を素早く取る
-    navigator.geolocation.getCurrentPosition(updateGpsDisplay, handleGpsError, {
-        enableHighAccuracy: false, // 最初はあえて低精度（速さ優先）で取る
-        timeout: 5000
-    });
-
-    // その後、継続的に監視する
-    navigator.geolocation.watchPosition(updateGpsDisplay, handleGpsError, gpsOptions);
-}
-
-function updateGpsDisplay(pos) {
-    currentLat = pos.coords.latitude;
-    currentLng = pos.coords.longitude;
-    const accuracy = pos.coords.accuracy; // 精度（メートル）
-    
-    document.getElementById('current-gps-info').innerText = 
-        `現在地: ${currentLat.toFixed(6)}, ${currentLng.toFixed(6)} (精度: ±${Math.round(accuracy)}m)`;
-    
-    // 地図の自分の位置を示す青い円などを更新する処理をここに入れるとより親切です
-}
-
-function handleGpsError(err) {
-    console.warn(`GPS Error(${err.code}): ${err.message}`);
-    document.getElementById('current-gps-info').innerText = "GPS信号を探しています...";
-}
-
-    function saveCurrentLocation(id, index = null) {
+    function saveLoc(id, idx = null) {
         if (!currentLat) return;
-        const customCoords = JSON.parse(localStorage.getItem('admin_coords')) || {};
-        
-        if (index !== null) { // 複数座標（スポット1など）
-            if (!customCoords[id]) customCoords[id] = { locations: [...targets[id].locations] };
-            customCoords[id].locations[index] = { lat: currentLat, lng: currentLng };
-        } else { // 単一座標
-            customCoords[id] = { lat: currentLat, lng: currentLng };
-        }
-        
-        localStorage.setItem('admin_coords', JSON.stringify(customCoords));
-        alert(`スポット[${id}${index!==null?'-'+index:''}] を現在地に設定しました。再読み込みで反映します。`);
+        const c = JSON.parse(localStorage.getItem('admin_coords')) || {};
+        if (idx !== null) { if(!c[id]) c[id] = {locations:[...targets[id].locations]}; c[id].locations[idx] = {lat:currentLat, lng:currentLng}; }
+        else c[id] = {lat:currentLat, lng:currentLng};
+        localStorage.setItem('admin_coords', JSON.stringify(c));
+        alert("設定完了。再読み込みしてください。");
     }
 
-    function exportCoords() {
-        const output = document.getElementById('coords-output');
-        output.style.display = 'block';
-        output.value = "const targets = " + JSON.stringify(targets, null, 2) + ";";
-        output.select();
-        alert("下のテキストエリアのコードをコピーして、GitHubのソースコードを書き換えてください。");
-    }
-
-    function resetAdminCoords() {
-        if (confirm("すべての座標調整をリセットしますか？")) {
-            localStorage.removeItem('admin_coords');
-            location.reload();
-        }
-    }
-
-    // --- 共通 ---
-    function openModal(id) {
-        document.getElementById('modalTitle').innerText = targets[id].name;
-        document.getElementById('modalImg').src = targets[id].imgUrl;
-        document.getElementById('modalBody').innerHTML = targets[id].description;
-        document.getElementById('infoModal').style.display = 'flex';
-    }
-    function closeModal() { document.getElementById('infoModal').style.display = 'none'; }
-    function getDistance(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+    function adminTrigger() { if (++tapCount >= 5) { document.getElementById('admin-panel').style.display = 'block'; tapCount = 0; } }
+    function exportCoords() { const o = document.getElementById('coords-output'); o.style.display='block'; o.value="const targets = "+JSON.stringify(targets,null,2)+";"; o.select(); }
+    function resetAdminCoords() { if(confirm("リセット？")){ localStorage.removeItem('admin_coords'); location.reload(); } }
+    function openModal(id) { document.getElementById('modalTitle').innerText=targets[id].name; document.getElementById('modalImg').src=targets[id].imgUrl; document.getElementById('modalBody').innerHTML=targets[id].description; document.getElementById('infoModal').style.display='flex'; }
+    function closeModal() { document.getElementById('infoModal').style.display='none'; }
+    function getDist(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
     window.onload = init;
 </script>
 </body>
