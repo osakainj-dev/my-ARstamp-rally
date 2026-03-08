@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>St. Patrick's Stamp Rally</title>
-    <link rel="apple-touch-icon" href="logo.png">
-    <link rel="icon" type="image/png" href="logo.png">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
@@ -26,7 +23,6 @@
         #map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); background: #eee; }
         .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; }
         
-        /* ユーザー用リフレッシュボタン */
         .refresh-ui-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: white; border: 2px solid var(--gold); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 999; cursor: pointer; }
 
         .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
@@ -44,9 +40,7 @@
         .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
 
         #admin-panel { display: none; background: #333; color: white; padding: 15px; margin-top: 20px; border-radius: 10px; font-size: 12px; }
-        .admin-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
-        .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 10px; cursor: pointer; }
-        #coords-output { width: 100%; height: 80px; margin-top: 10px; display: none; font-size: 8px; background: #000; color: #0f0; }
+        .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 10px; cursor: pointer; width: 100%; margin-top: 5px;}
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
@@ -63,13 +57,15 @@
         <img src="./logo.png" alt="Logo" class="title-image" onclick="adminTrigger()">
     </div>
 
-    <div style="text-align: center; padding: 10px; font-size: 0.85rem; line-height: 1.4; color: var(--dark-green);">
+    <div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
         <p style="margin: 0; font-weight: bold;">街を巡ってARスタンプを集めよう！</p>
-        <p style="margin: 4px 0 0 0;">知恵を集めて、虹の麓のゴールへ☘️</p>
+        <p style="margin: 5px 0 0 0;">ちらばった12個のうち9つの知恵を集めると、<br>
+            コールポイントのロックが解除されるよ。<br>
+            虹の麓に隠されたゴールを目指せ！☘️</p>
     </div>
     
     <div id="map"></div>
-    <div id="status">読み込み中...</div>
+    <div id="status">スタンプを集めよう！</div>
     <button class="check-btn" onclick="checkLocation()">現在地でスタンプ！</button>
 
     <div class="stamp-grid" id="stamp-grid-main"></div>
@@ -78,19 +74,19 @@
     <div id="admin-panel">
         <strong>🔧 管理者モード</strong><br>
         <span id="current-gps-info">GPS取得中...</span>
-        <div class="admin-ctrl" id="admin-buttons"></div>
-        <button class="admin-btn" style="width:100%; margin-top:10px; background:#007bff;" onclick="exportCoords()">📋 設定値を書き出す</button>
-        <textarea id="coords-output" readonly></textarea>
-        <button class="admin-btn" style="width:100%; margin-top:10px; background:#a22;" onclick="resetAdminCoords()">全リセット</button>
+        <button class="admin-btn" onclick="saveLoc('1', 0)">[1-A] 設定</button>
+        <button class="admin-btn" onclick="saveLoc('1', 1)">[1-B] 設定</button>
+        <button class="admin-btn" onclick="saveLoc('1', 2)">[1-C] 設定</button>
+        <button class="admin-btn" style="background:#a22;" onclick="resetAdminCoords()">設定リセット</button>
     </div>
 </div>
 
-<div class="refresh-ui-btn" onclick="location.reload()" title="画面を更新">🔄</div>
+<div class="refresh-ui-btn" onclick="location.reload()">🔄</div>
 
 <div id="infoModal" class="modal-overlay" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <span class="modal-close" onclick="closeModal()">&times;</span>
-        <h2 id="modalTitle" style="margin-top:0;"></h2>
+        <h2 id="modalTitle"></h2>
         <img id="modalImg" class="modal-image" src="">
         <div id="modalBody"></div>
     </div>
@@ -98,15 +94,13 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-   // 全スポットのデータ（スポット1のみ複数座標対応版）
     const targets = {
         "1": { 
             name: "三つ葉の広場", 
-            // 3箇所のうち、どこか1つに近づけばOK
             locations: [
-                { lat: 35.7725, lng: 139.6615 }, // 1-A
-                { lat: 35.7730, lng: 139.6620 }, // 1-B
-                { lat: 35.7735, lng: 139.6625 }  // 1-C
+                { lat: 35.7725, lng: 139.6615 }, 
+                { lat: 35.7730, lng: 139.6620 }, 
+                { lat: 35.7735, lng: 139.6625 }  
             ],
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
             imgUrl: "https://images.unsplash.com/photo-1590076215667-873d3253503a?w=500", 
@@ -175,7 +169,7 @@
     };
 
     let map, markers = {};
-    const storageKey = 'rally_v15_fast'; 
+    const storageKey = 'rally_v30_final'; 
     const GOAL_ID = "13"; 
     const REQUIRED_COUNT = 9; 
     let tapCount = 0;
@@ -195,7 +189,6 @@
         applyAdminOffsets();
         const gridMain = document.getElementById('stamp-grid-main');
         const goalArea = document.getElementById('goal-area');
-        const adminBtnContainer = document.getElementById('admin-buttons');
         
         for (let i = 1; i <= 13; i++) {
             const id = String(i);
@@ -203,41 +196,27 @@
             div.id = `stamp-${id}`;
             if (id === GOAL_ID) {
                 div.className = 'stamp goal';
-                div.innerHTML = `<span id="goal-name">🔒 ${REQUIRED_COUNT}個で解放</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-${id}" target="_blank">☘️ AR</a></div>`;
+                div.innerHTML = `<span id="goal-name">🔒 9つのスタンプを集めて</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-${id}" target="_blank">☘️ AR</a></div>`;
                 goalArea.appendChild(div);
             } else {
                 div.className = 'stamp';
                 div.innerHTML = `<span>${targets[id].name}</span><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" id="ar-link-${id}" class="btn-ui ar-btn" target="_blank">☘️ AR</a>`;
                 gridMain.appendChild(div);
             }
-
-            if (id === "1") {
-                ["A", "B", "C"].forEach((label, idx) => {
-                    const b = document.createElement('button'); b.className='admin-btn'; b.innerText=`[1-${label}]設定`;
-                    b.onclick=()=>saveLoc(id, idx); adminBtnContainer.appendChild(b);
-                });
-            } else {
-                const b = document.createElement('button'); b.className='admin-btn'; b.innerText=`[${id}]設定`;
-                b.onclick=()=>saveLoc(id); adminBtnContainer.appendChild(b);
-            }
         }
         
-        // 軽量タイルサーバーに変更
         const center = targets["1"].locations ? targets["1"].locations[0] : targets["1"];
-        map = L.map('map', { zoomSnap: 0.5 }).setView([center.lat, center.lng], 14);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '©CARTO', subdomains: 'abcd', maxZoom: 19
-        }).addTo(map);
+        map = L.map('map').setView([center.lat, center.lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         for (let id in targets) {
             markers[id] = [];
-            const isGoal = (id == GOAL_ID);
             if (targets[id].locations) {
                 targets[id].locations.forEach(loc => {
                     markers[id].push(L.marker([loc.lat, loc.lng], {icon: L.divIcon({className:'custom-marker', html:'📍', iconSize:[30,30]})}).addTo(map));
                 });
             } else {
-                markers[id].push(L.marker([targets[id].lat, targets[id].lng], {icon: L.divIcon({className:'custom-marker', html:isGoal?'🔒':'📍', iconSize:[30,30]})}).addTo(map));
+                markers[id].push(L.marker([targets[id].lat, targets[id].lng], {icon: L.divIcon({className:'custom-marker', html:(id==GOAL_ID?'🔒':'📍'), iconSize:[30,30]})}).addTo(map));
             }
         }
         updateDisplay();
@@ -246,10 +225,6 @@
 
     function startGps() {
         const opt = { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 };
-        navigator.geolocation.getCurrentPosition(pos => {
-            currentLat = pos.coords.latitude; currentLng = pos.coords.longitude;
-            document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
-        }, null, { timeout: 5000 });
         navigator.geolocation.watchPosition(pos => {
             currentLat = pos.coords.latitude; currentLng = pos.coords.longitude;
             document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
@@ -257,7 +232,7 @@
     }
 
     function checkLocation() {
-        if (!currentLat) { alert("GPS信号を取得中です。少しお待ちください。"); return; }
+        if (!currentLat) { alert("GPSを取得中..."); return; }
         let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
         const mainCount = stamps.filter(id => id != GOAL_ID).length;
         let foundId = null;
@@ -266,7 +241,7 @@
             const t = targets[id];
             const isNear = t.locations ? t.locations.some(l => getDist(currentLat, currentLng, l.lat, l.lng) < 0.05) : getDist(currentLat, currentLng, t.lat, t.lng) < 0.05;
             if (isNear) {
-                if (id == GOAL_ID && mainCount < REQUIRED_COUNT) { alert("まだ知恵が足りません！"); return; }
+                if (id == GOAL_ID && mainCount < REQUIRED_COUNT) { alert("まだゴールは開いていません！"); return; }
                 foundId = id; break;
             }
         }
@@ -274,7 +249,7 @@
         if (foundId) {
             if (!stamps.includes(foundId)) {
                 stamps.push(foundId); localStorage.setItem(storageKey, JSON.stringify(stamps));
-                updateDisplay(); alert("☘️ スタンプゲット！");
+                updateDisplay(); alert("☘️ おめでとう！スタンプをゲット！");
             } else alert("獲得済みです！");
         } else alert("近くにスポットがありません。地図の📍を目指してね");
     }
@@ -285,33 +260,29 @@
         stamps.forEach(id => {
             document.getElementById("stamp-" + id)?.classList.add("active");
             const ar = document.getElementById("ar-link-" + id); if(ar){ ar.href = targets[id].arUrl; ar.style.display = "block"; }
-            if(id != GOAL_ID) markers[id].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'☘️', iconSize:[30,30]})));
+            markers[id].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:(id==GOAL_ID?'🌈':'☘️'), iconSize:[30,30]})));
         });
         if (mainCount >= REQUIRED_COUNT) {
             document.getElementById("stamp-"+GOAL_ID).classList.add("ready");
             document.getElementById("goal-name").innerText = targets[GOAL_ID].name;
             document.getElementById("goal-btns").style.display = "block";
-            markers[GOAL_ID][0].setIcon(L.divIcon({className:'custom-marker', html:'🚩', iconSize:[30,30]}));
         }
-        if (stamps.includes(GOAL_ID)) {
-            document.getElementById("stamp-"+GOAL_ID).classList.add("active");
-            markers[GOAL_ID][0].setIcon(L.divIcon({className:'custom-marker', html:'🌈', iconSize:[30,30]}));
-        }
-        document.getElementById("status").innerText = `集めた数: ${mainCount} / ${REQUIRED_COUNT}`;
+        document.getElementById("status").innerText = `集めたスタンプ: ${mainCount} / ${REQUIRED_COUNT}`;
     }
 
     function saveLoc(id, idx = null) {
         if (!currentLat) return;
         const c = JSON.parse(localStorage.getItem('admin_coords')) || {};
-        if (idx !== null) { if(!c[id]) c[id] = {locations:[...targets[id].locations]}; c[id].locations[idx] = {lat:currentLat, lng:currentLng}; }
-        else c[id] = {lat:currentLat, lng:currentLng};
+        if (idx !== null) { 
+            if(!c[id]) c[id] = {locations:[...targets[id].locations]}; 
+            c[id].locations[idx] = {lat:currentLat, lng:currentLng}; 
+        }
         localStorage.setItem('admin_coords', JSON.stringify(c));
-        alert("設定完了。再読み込みしてください。");
+        alert("座標を保存しました。画面を更新してください。");
     }
 
     function adminTrigger() { if (++tapCount >= 5) { document.getElementById('admin-panel').style.display = 'block'; tapCount = 0; } }
-    function exportCoords() { const o = document.getElementById('coords-output'); o.style.display='block'; o.value="const targets = "+JSON.stringify(targets,null,2)+";"; o.select(); }
-    function resetAdminCoords() { if(confirm("リセット？")){ localStorage.removeItem('admin_coords'); location.reload(); } }
+    function resetAdminCoords() { if(confirm("管理者が設定した座標をリセットしますか？")){ localStorage.removeItem('admin_coords'); location.reload(); } }
     function openModal(id) { document.getElementById('modalTitle').innerText=targets[id].name; document.getElementById('modalImg').src=targets[id].imgUrl; document.getElementById('modalBody').innerHTML=targets[id].description; document.getElementById('infoModal').style.display='flex'; }
     function closeModal() { document.getElementById('infoModal').style.display='none'; }
     function getDist(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
