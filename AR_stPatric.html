@@ -29,7 +29,7 @@
         .refresh-ui-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: white; border: 2px solid var(--gold); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 9999; cursor: pointer; }
 
         .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-        .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; font-size: 11px; }
+        .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; font-size: 11px; position: relative; }
         .stamp.goal { width: 75%; border: 3px double #ccc; background: #eee; min-height: 140px; color: #999; margin: 0 auto; }
         .stamp.goal.ready { border-color: var(--gold); background: #fffdf0; color: var(--dark-green); }
         .goal-container { margin-top: 10px; text-align: center; }
@@ -43,8 +43,11 @@
         .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
 
         #admin-panel { display: none; background: #333; color: white; padding: 15px; margin-top: 20px; border-radius: 10px; font-size: 12px; }
-        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
-        .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 9px; cursor: pointer; }
+        .admin-row { border-bottom: 1px dotted #666; padding: 10px 0; display: flex; flex-direction: column; gap: 5px; }
+        .admin-row:last-child { border-bottom: none; }
+        .admin-btn-group { display: flex; gap: 5px; }
+        .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; }
+        .reset-item-btn { background: #a55; border-color: #f77; max-width: 60px; }
         .export-area { width: 100%; height: 100px; margin-top: 10px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; display: none; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
@@ -68,8 +71,8 @@
 
     <div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
         <p style="margin: 0; font-weight: bold;">街を巡ってARスタンプを集めよう！</p>
-        <p style="margin: 5px 0 0 0;">この中から9つの知恵を集めると、<br>
-            最終ポイントのロックが解除されます。<br>
+        <p style="margin: 5px 0 0 0;">15個の中から9つのスタンプを集ると、<br>
+            最終ポイントのロックが解除。<br>
             虹の麓に隠されたゴールを目指せ！☘️</p>
     </div>
     
@@ -82,11 +85,15 @@
 
     <div id="admin-panel">
         <strong>🔧 管理者モード</strong><br>
-        <div id="current-gps-info">GPS取得中...</div>
-        <div class="admin-grid" id="admin-button-container"></div>
-        <button class="admin-btn" style="background:var(--irish-green); width:100%; margin-top:10px;" onclick="exportSettings()">✅ 設定を書き出し (シリアル化)</button>
+        <div id="current-gps-info" style="margin-bottom:10px;">GPS取得中...</div>
+        
+        <div id="admin-list-container">
+            </div>
+
+        <button class="admin-btn" style="background:var(--irish-green); width:100%; margin-top:15px; font-size:12px;" onclick="exportSettings()">✅ 設定を書き出し (シリアル化)</button>
         <textarea id="export-area" class="export-area"></textarea>
-        <button class="admin-btn" style="background:#a22; width:100%; margin-top:10px;" onclick="resetAdminCoords()">全設定リセット</button>
+        <button class="admin-btn" style="background:#444; width:100%; margin-top:10px;" onclick="location.reload()">🔄 画面を更新して反映</button>
+        <button class="admin-btn" style="background:#a22; width:100%; margin-top:20px;" onclick="resetAdminCoords()">全データ完全初期化</button>
     </div>
 </div>
 
@@ -120,7 +127,7 @@
     };
 
     let map, markers = {};
-    const storageKey = 'rally_v37_final'; 
+    const storageKey = 'rally_v38_final'; 
     const GOAL_ID = "13"; 
     const REQUIRED_COUNT = 9; 
     let tapCount = 0;
@@ -140,10 +147,11 @@
         applyAdminOffsets();
         const gridMain = document.getElementById('stamp-grid-main');
         const goalArea = document.getElementById('goal-area');
-        const adminContainer = document.getElementById('admin-button-container');
+        const adminContainer = document.getElementById('admin-list-container');
         
         for (let i = 1; i <= 13; i++) {
             const id = String(i);
+            // スタンプ表示の生成
             const div = document.createElement('div');
             div.id = `stamp-${id}`;
             if (id === GOAL_ID) {
@@ -156,21 +164,40 @@
                 gridMain.appendChild(div);
             }
 
+            // 管理者用パネル：設定と個別リセットを1行に
+            const row = document.createElement('div');
+            row.className = 'admin-row';
+            const title = document.createElement('div');
+            title.innerText = `[${id}] ${targets[id].name}`;
+            row.appendChild(title);
+
+            const group = document.createElement('div');
+            group.className = 'admin-btn-group';
+
             if (id === "1") {
                 ["A", "B", "C"].forEach((label, idx) => {
                     const btn = document.createElement('button');
                     btn.className = 'admin-btn';
-                    btn.innerText = `[1-${label}] 設定`;
+                    btn.innerText = `登録-${label}`;
                     btn.onclick = () => saveLoc('1', idx);
-                    adminContainer.appendChild(btn);
+                    group.appendChild(btn);
                 });
             } else {
                 const btn = document.createElement('button');
                 btn.className = 'admin-btn';
-                btn.innerText = `[${id}] ${targets[id].name} 設定`;
+                btn.innerText = `現在地を登録`;
                 btn.onclick = () => saveLoc(id);
-                adminContainer.appendChild(btn);
+                group.appendChild(btn);
             }
+
+            const resetBtn = document.createElement('button');
+            resetBtn.className = 'admin-btn reset-item-btn';
+            resetBtn.innerText = `クリア`;
+            resetBtn.onclick = () => resetSingleStamp(id);
+            group.appendChild(resetBtn);
+
+            row.appendChild(group);
+            adminContainer.appendChild(row);
         }
         
         const center = targets["1"].locations ? targets["1"].locations[0] : targets["1"];
@@ -219,21 +246,34 @@
                 stamps.push(foundId); localStorage.setItem(storageKey, JSON.stringify(stamps));
                 updateDisplay(); alert("☘️ おめでとう！スタンプをゲット！");
             } else alert("獲得済みです！");
-        } else alert("近くにスポットがありません。地図の📍を目指してね");
+        } else alert("近くにスポットがありません。");
     }
 
     function updateDisplay() {
         let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
         const mainCount = stamps.filter(id => id != GOAL_ID).length;
+        
+        // 全スタンプの表示をリセット
+        for(let i=1; i<=13; i++){
+            document.getElementById("stamp-"+i)?.classList.remove("active");
+            const ar = document.getElementById("ar-link-"+i); if(ar) ar.style.display="none";
+        }
+
         stamps.forEach(id => {
             document.getElementById("stamp-" + id)?.classList.add("active");
             const ar = document.getElementById("ar-link-" + id); if(ar){ ar.href = targets[id].arUrl; ar.style.display = "block"; }
             markers[id].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:(id==GOAL_ID?'🌈':'☘️'), iconSize:[30,30]})));
         });
+
         if (mainCount >= REQUIRED_COUNT) {
             document.getElementById("stamp-"+GOAL_ID).classList.add("ready");
             document.getElementById("goal-name").innerText = targets[GOAL_ID].name;
             document.getElementById("goal-btns").style.display = "block";
+        } else {
+            document.getElementById("stamp-"+GOAL_ID).classList.remove("ready");
+            document.getElementById("goal-name").innerText = "🔒 9つのスタンプを集めて";
+            document.getElementById("goal-btns").style.display = "none";
+            markers[GOAL_ID].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'🔒', iconSize:[30,30]})));
         }
         document.getElementById("status").innerText = `集めたスタンプ: ${mainCount} / ${REQUIRED_COUNT}`;
     }
@@ -248,7 +288,21 @@
             c[id] = {lat:currentLat, lng:currentLng};
         }
         localStorage.setItem('admin_coords', JSON.stringify(c));
-        alert(`${targets[id].name} 登録。リロードして確認。`);
+        alert(`${targets[id].name} 登録。画面を更新してください。`);
+    }
+
+    // ★ 個別リセット機能
+    function resetSingleStamp(id) {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const index = stamps.indexOf(id);
+        if (index > -1) {
+            stamps.splice(index, 1);
+            localStorage.setItem(storageKey, JSON.stringify(stamps));
+            updateDisplay();
+            alert(`${targets[id].name} の獲得状況をリセットしました。`);
+        } else {
+            alert("このスポットはまだ獲得していません。");
+        }
     }
 
     function exportSettings() {
@@ -258,11 +312,11 @@
         area.value = JSON.stringify(targets, null, 4);
         area.select();
         document.execCommand('copy');
-        alert("現在の全座標をJSON形式で書き出しました。クリップボードにもコピーされています。これをHTMLの 'const targets = { ... };' の部分に貼り付けてください。");
+        alert("設定を書き出しました。コードに貼り付けてください。");
     }
 
     function adminTrigger() { if (++tapCount >= 5) { document.getElementById('admin-panel').style.display = 'block'; tapCount = 0; } }
-    function resetAdminCoords() { if(confirm("全リセット？")){ localStorage.removeItem('admin_coords'); location.reload(); } }
+    function resetAdminCoords() { if(confirm("座標設定もスタンプも全てリセットしますか？")){ localStorage.removeItem('admin_coords'); localStorage.removeItem(storageKey); location.reload(); } }
     function openModal(id) { document.getElementById('modalTitle').innerText=targets[id].name; document.getElementById('modalImg').src=targets[id].imgUrl; document.getElementById('modalBody').innerHTML=targets[id].description; document.getElementById('infoModal').style.display='flex'; }
     function closeModal() { document.getElementById('infoModal').style.display='none'; }
     function getDist(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
