@@ -130,8 +130,8 @@
               arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
               imgUrl: "./spot3.png", 
               description: `<b>【カラフルなドア】</b><br>
-                        18世紀から続くダブリンの伝統。隣の家と同じ色にならないように鮮やかに塗られました。
-                         <br><small>Dublin Bay)<br>
+                        18世紀から続くダブリンの伝統。隣の家と同じ色にならないように鮮やかに塗られました。<br>
+                         <small>Dublin Bay<br>
                          ※営業時間（17:00〜24:00頃）営業時間外も外から取得できます</small>`},
         
         "4": { name: "吟遊詩人の竪琴 <br>(法善寺横丁)", lat: 34.6675, lng: 135.5025, 
@@ -402,7 +402,7 @@
     function adminTrigger() { if (++tapCount >= 5) { document.getElementById('admin-panel').style.display = 'block'; tapCount = 0; } }
     function resetAdminCoords() { if(confirm("全て初期化しますか？")){ localStorage.clear(); location.reload(); } }
     function openModal(id) { 
-        document.getElementById('modalTitle').innerText=targets[id].name; 
+        document.getElementById('modalTitle').innerHTML=targets[id].name; 
         document.getElementById('modalImg').src=targets[id].imgUrl; 
         document.getElementById('modalBody').innerHTML=targets[id].description; 
         document.getElementById('infoModal').style.display='flex'; 
