@@ -107,19 +107,84 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     let targets = {
-        "1": { name: "三つ葉の広場", locations: [{ lat: 34.7006, lng: 135.4942 }, { lat: 34.7010, lng: 135.5005 }, { lat: 34.6735, lng: 135.5015 }], arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot1.png", description: "パブから始まる旅の始まり。三つ葉はアイルランドの象徴です。" },
-        "2": { name: "妖精の靴屋 (Dublin Bay)", lat: 34.6690, lng: 135.5005, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot2.png", description: "靴を直す妖精レプラコーン。パブの賑やかな隅っこに隠れているかも？" },
-        "3": { name: "ダブリンの扉 (Dublin Bay)", lat: 34.6690, lng: 135.5005, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot3.png", description: "歓迎を意味するカラフルなドア。ここからアイルランドの世界へ！" },
-        "4": { name: "吟遊詩人の竪琴 (法善寺)", lat: 34.6675, lng: 135.5025, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot4.png", description: "石畳の路地に響くハープの音色。国の魂として愛される楽器です。" },
-        "5": { name: "巨人の道 (松竹座)", lat: 34.6685, lng: 135.5015, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot5.png", description: "世界遺産の奇岩を思わせる石柱。巨人の伝説が息づく場所です。" },
-        "6": { name: "ケルトの結び目 (公会堂)", lat: 34.6935, lng: 135.5035, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot6.png", description: "途切れない文様は永遠の象徴。美しい建築の中にその意匠を重ねて。" },
-        "7": { name: "羊の住む丘 (知恩院)", lat: 35.0048, lng: 135.7821, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot7.png", description: "万博から来た羊「マグナス・リン」がお出迎え。アラン諸島の丘の風景です。" },
-        "8": { name: "スロンチャ！ (くいだおれ)", lat: 34.6685, lng: 135.5035, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot8.png", description: "「乾杯（スロンチャ）！」の声が響く。太郎さんと一緒にお祝いしましょう。" },
-        "9": { name: "守護聖人の書 (メリケン)", lat: 34.6825, lng: 135.1875, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot9.png", description: "世界一美しい本「ケルズの書」。港町に届いた異国の芸術を想います。" },
-        "10": { name: "聖なる泉 (うめきた)", lat: 34.7045, lng: 135.4945, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot10.png", description: "都会に湧く水。各地にある癒やしの力を持つ「ホーリー・ウェル」に見立てて。" },
-        "11": { name: "緑の谷 (御堂会館)", lat: 34.6805, lng: 135.4995, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot11.png", description: "重厚な建物の静寂は、エメラルドの島の深く穏やかな谷（グレン）のよう。" },
-        "12": { name: "風の砦 (風の広場)", lat: 34.7031, lng: 135.4948, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./spot12.png", description: "吹き抜ける風とビル群。断崖絶壁に建つ石造りの砦のような迫力です。" },
-        "13": { name: "🌈 虹の麓の黄金 (ゴール)", lat: 34.6691, lng: 135.5033, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "./goal.png", description: "おめでとう！9つの知恵を集めたあなたに、虹の麓の黄金が輝きます。" }
+        "1": { name: "三つ葉の広場", locations: [{ lat: 34.7006, lng: 135.4942 }, { lat: 34.7010, lng: 135.5005 }, { lat: 34.6735, lng: 135.5015 }], 
+              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+              imgUrl: "./spot1.png", 
+              description: "パブから始まる旅の始まり。三つ葉はアイルランドの象徴です。<br>
+                            <br><small>THE BLARNEY STONE </small>" },
+" },
+        
+        "2": { name: "妖精の靴屋 (Dublin Bay)", lat: 34.6690, lng: 135.5005, 
+              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+              imgUrl: "./spot2.png", 
+              description: "靴を直す妖精レプラコーン。パブの賑やかな隅っこに隠れているかも？" 
+                         <br><small>※店舗営業時間内（17:00〜24:00頃）にお越しください</small>"},
+        
+        "3": { name: "ダブリンの扉 (Dublin Bay)", lat: 34.6690, lng: 135.5005, 
+              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+              imgUrl: "./spot3.png", 
+              description: "歓迎を意味するカラフルなドア。ここからアイルランドの世界へ！
+                        <br><small>※店舗営業時間内（17:00〜24:00頃）にお越しください。</small>" },
+        
+        "4": { name: "吟遊詩人の竪琴 (法善寺)", lat: 34.6675, lng: 135.5025, 
+              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+              imgUrl: "./spot4.png", 
+              description: "石畳の路地に響くハープの音色。国の魂として愛される楽器です。
+            <br><small>※参拝可能時間にお越しください。</small>" },
+        
+        "5": { name: "巨人の道 (松竹座)", lat: 34.6685, lng: 135.5015, 
+              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+              imgUrl: "./spot5.png", 
+              description: "世界遺産の奇岩を思わせる石柱。巨人の伝説が息づく場所です。
+            <br><small>※建物周辺は24時間訪問可能です。</small>"  },
+        
+        "6": { name: "ケルトの結び目 (公会堂)", lat: 34.6935, lng: 135.5035, 
+              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+              imgUrl: "./spot6.png", 
+              description: "途切れない文様は永遠の象徴。美しい建築の中にその意匠を重ねて。
+            <br><small>※外観見学は自由ですが、夜間は足元にご注意ください。</small>"  },
+        
+        "7": { name: "羊の住む丘 (知恩院)", lat: 35.0048, lng: 135.7821, 
+              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+              imgUrl: "./spot7.png", 
+              description: "万博から来た羊「マグナス・リン」がお出迎え。アラン諸島の丘の風景です。
+            <br><small>※開門時間（9:00〜16:00頃）にお越しください。</small>" },
+        
+        "8": { name: "スロンチャ！ (くいだおれ)", lat: 34.6685, lng: 135.5035, 
+              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+              imgUrl: "./spot8.png", 
+              description: "「乾杯（スロンチャ）！」の声が響く。太郎さんと一緒にお祝いしましょう。
+            <br><small>※ビル開館時間（10:00〜22:00頃）にお越しください。</small>" },
+        
+        "9": { name: "守護聖人の書 (メリケン)", lat: 34.6825, lng: 135.1875, 
+              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+              imgUrl: "./spot9.png", 
+              description: "世界一美しい本「ケルズの書」。港町に届いた異国の芸術を想います。
+            <br><small>※公園エリアのため24時間訪問可能です。</small>" },
+        
+        "10": { name: "聖なる泉 (うめきた)", lat: 34.7045, lng: 135.4945, 
+               arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+               imgUrl: "./spot10.png", 
+               description: "都会に湧く水。各地にある癒やしの力を持つ「ホーリー・ウェル」に見立てて。
+            <br><small>※広場のため24時間訪問可能です。</small>" },
+        
+        "11": { name: "緑の谷 (御堂会館)", lat: 34.6805, lng: 135.4995, 
+               arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+               imgUrl: "./spot11.png", 
+               description: "重厚な建物の静寂は、エメラルドの島の深く穏やかな谷（グレン）のよう。
+            <br><small>※建物周辺の見学は自由です。</small>" },
+        
+        "12": { name: "風の砦 (風の広場)", lat: 34.7031, lng: 135.4948, 
+               arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+               imgUrl: "./spot12.png", 
+               description: "吹き抜ける風とビル群。断崖絶壁に建つ石造りの砦のような迫力です。
+            <br><small>※開放時間（10:00〜20:00頃）にご注意ください。</small>" },
+        
+        "13": { name: "🌈 虹の麓の黄金 (ゴール)", lat: 34.6691, lng: 135.5033, 
+               arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+               imgUrl: "./goal.png", 
+               description: "おめでとう！9つの知恵を集めたあなたに、虹の麓の黄金が輝きます。
+            <br><small>※最終ゴール地点の開放時間に準じます。</small>" }
     };
 
     let map, markers = {};
