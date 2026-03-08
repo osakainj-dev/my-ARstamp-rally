@@ -324,7 +324,7 @@
                     updateDisplay();
                     alert("☘️ おめでとう！スタンプゲット！");
                 } else { alert("ここは獲得済みです！"); }
-            } else { alert("近くにスポットがありません。もっと近づいてみてね。"); }
+            } else { alert("近くにスポットがありません。地図の📍を目指してね"); }
         }, err => alert("GPSをオンにしてください"), {enableHighAccuracy: true});
     }
 
@@ -337,13 +337,38 @@
         }
     }
 
-    function startGpsTracking() {
-        navigator.geolocation.watchPosition(pos => {
-            currentLat = pos.coords.latitude;
-            currentLng = pos.coords.longitude;
-            document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
-        }, null, {enableHighAccuracy: true});
-    }
+function startGpsTracking() {
+    const gpsOptions = {
+        enableHighAccuracy: true, // 高精度モード
+        timeout: 10000,           // 10秒でタイムアウト
+        maximumAge: 3000          // 3秒以内のキャッシュなら再利用
+    };
+
+    // 最初の1回を素早く取る
+    navigator.geolocation.getCurrentPosition(updateGpsDisplay, handleGpsError, {
+        enableHighAccuracy: false, // 最初はあえて低精度（速さ優先）で取る
+        timeout: 5000
+    });
+
+    // その後、継続的に監視する
+    navigator.geolocation.watchPosition(updateGpsDisplay, handleGpsError, gpsOptions);
+}
+
+function updateGpsDisplay(pos) {
+    currentLat = pos.coords.latitude;
+    currentLng = pos.coords.longitude;
+    const accuracy = pos.coords.accuracy; // 精度（メートル）
+    
+    document.getElementById('current-gps-info').innerText = 
+        `現在地: ${currentLat.toFixed(6)}, ${currentLng.toFixed(6)} (精度: ±${Math.round(accuracy)}m)`;
+    
+    // 地図の自分の位置を示す青い円などを更新する処理をここに入れるとより親切です
+}
+
+function handleGpsError(err) {
+    console.warn(`GPS Error(${err.code}): ${err.message}`);
+    document.getElementById('current-gps-info').innerText = "GPS信号を探しています...";
+}
 
     function saveCurrentLocation(id, index = null) {
         if (!currentLat) return;
