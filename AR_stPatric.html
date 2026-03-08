@@ -20,16 +20,13 @@
         .title-image-container { text-align: center; margin-bottom: 10px; width: 100%; }
         .title-image { width: 100%; height: auto; max-width: 450px; display: block; margin: 0 auto; border-radius: 10px; cursor: pointer; }
 
-        /* ガイドページボタン */
         .guide-link-container { text-align: center; margin-bottom: 15px; }
         .guide-btn { display: inline-block; padding: 8px 20px; background: white; color: var(--irish-green); border: 2px solid var(--irish-green); border-radius: 20px; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
-        .guide-btn:active { background: var(--irish-green); color: white; }
 
         #map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); background: #eee; }
         .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; }
         
-        /* 更新ボタン：ホーム画面でも確実に出るよう z-index を高く設定 */
-        .refresh-ui-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: white; border: 2px solid var(--gold); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 9999; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .refresh-ui-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: white; border: 2px solid var(--gold); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 9999; cursor: pointer; }
 
         .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
         .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; font-size: 11px; }
@@ -46,7 +43,9 @@
         .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
 
         #admin-panel { display: none; background: #333; color: white; padding: 15px; margin-top: 20px; border-radius: 10px; font-size: 12px; }
-        .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 10px; cursor: pointer; width: 100%; margin-top: 5px;}
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
+        .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 9px; cursor: pointer; }
+        .export-area { width: 100%; height: 100px; margin-top: 10px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; display: none; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
@@ -69,8 +68,8 @@
 
     <div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
         <p style="margin: 0; font-weight: bold;">街を巡ってARスタンプを集めよう！</p>
-        <p style="margin: 5px 0 0 0;">9つの知恵をコンプリートして、<br>
-            最終ポイントのロックを解除。<br>
+        <p style="margin: 5px 0 0 0;">9つの知恵を集めると、<br>
+            最終ポイントのロックが解除されます。<br>
             虹の麓に隠されたゴールを目指せ！☘️</p>
     </div>
     
@@ -83,11 +82,11 @@
 
     <div id="admin-panel">
         <strong>🔧 管理者モード</strong><br>
-        <span id="current-gps-info">GPS取得中...</span>
-        <button class="admin-btn" onclick="saveLoc('1', 0)">[1-A] 設定</button>
-        <button class="admin-btn" onclick="saveLoc('1', 1)">[1-B] 設定</button>
-        <button class="admin-btn" onclick="saveLoc('1', 2)">[1-C] 設定</button>
-        <button class="admin-btn" style="background:#a22;" onclick="resetAdminCoords()">設定リセット</button>
+        <div id="current-gps-info">GPS取得中...</div>
+        <div class="admin-grid" id="admin-button-container"></div>
+        <button class="admin-btn" style="background:var(--irish-green); width:100%; margin-top:10px;" onclick="exportSettings()">✅ 設定を書き出し (シリアル化)</button>
+        <textarea id="export-area" class="export-area"></textarea>
+        <button class="admin-btn" style="background:#a22; width:100%; margin-top:10px;" onclick="resetAdminCoords()">全設定リセット</button>
     </div>
 </div>
 
@@ -104,18 +103,8 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const targets = {
-        "1": { 
-            name: "三つ葉の広場", 
-            locations: [
-                { lat: 35.7725, lng: 139.6615 }, 
-                { lat: 35.7730, lng: 139.6620 }, 
-                { lat: 35.7735, lng: 139.6625 }  
-            ],
-            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1590076215667-873d3253503a?w=500", 
-            description: "<b>【シャムロック】</b><br>三つ葉のクローバーはアイルランドの国花。聖パトリックがキリスト教を広める際、この葉を使って説明したと言われています。" 
-        },
+    let targets = {
+        "1": { name: "三つ葉の広場", locations: [{ lat: 35.7725, lng: 139.6615 }, { lat: 35.7730, lng: 139.6620 }, { lat: 35.7735, lng: 139.6625 }], arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1590076215667-873d3253503a?w=500", description: "<b>【シャムロック】</b><br>三つ葉のクローバーはアイルランドの国花。聖パトリックがキリスト教を広める際、この葉を使って説明したと言われています。" },
         "2": { name: "妖精の靴屋", lat: 35.6812, lng: 139.7671, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1599839619722-397514112634?w=500", description: "<b>【レプラコーン】</b><br>一人で黙々と靴を直す妖精。彼を捕まえれば黄金の場所を教えてくれます。" },
         "3": { name: "ダブリンの扉", lat: 35.6924, lng: 139.6971, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1582234032482-628d7a868430?w=500", description: "<b>【カラフルなドア】</b><br>18世紀から続くダブリンの伝統。隣の家と同じ色にならないように鮮やかに塗られました。" },
         "4": { name: "吟遊詩人の竪琴", lat: 35.7000, lng: 139.7000, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1595066601614-747f48037b52?w=500", description: "<b>【アイリッシュ・ハープ】</b><br>アイルランドの国章にもなっている竪琴。国の魂として愛されています。" },
@@ -131,7 +120,7 @@
     };
 
     let map, markers = {};
-    const storageKey = 'rally_v35_final'; 
+    const storageKey = 'rally_v37_final'; 
     const GOAL_ID = "13"; 
     const REQUIRED_COUNT = 9; 
     let tapCount = 0;
@@ -151,6 +140,7 @@
         applyAdminOffsets();
         const gridMain = document.getElementById('stamp-grid-main');
         const goalArea = document.getElementById('goal-area');
+        const adminContainer = document.getElementById('admin-button-container');
         
         for (let i = 1; i <= 13; i++) {
             const id = String(i);
@@ -164,6 +154,22 @@
                 div.className = 'stamp';
                 div.innerHTML = `<span>${targets[id].name}</span><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" id="ar-link-${id}" class="btn-ui ar-btn" target="_blank">☘️ AR</a>`;
                 gridMain.appendChild(div);
+            }
+
+            if (id === "1") {
+                ["A", "B", "C"].forEach((label, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'admin-btn';
+                    btn.innerText = `[1-${label}] 設定`;
+                    btn.onclick = () => saveLoc('1', idx);
+                    adminContainer.appendChild(btn);
+                });
+            } else {
+                const btn = document.createElement('button');
+                btn.className = 'admin-btn';
+                btn.innerText = `[${id}] ${targets[id].name} 設定`;
+                btn.onclick = () => saveLoc(id);
+                adminContainer.appendChild(btn);
             }
         }
         
@@ -238,13 +244,25 @@
         if (idx !== null) { 
             if(!c[id]) c[id] = {locations:[...targets[id].locations]}; 
             c[id].locations[idx] = {lat:currentLat, lng:currentLng}; 
+        } else {
+            c[id] = {lat:currentLat, lng:currentLng};
         }
         localStorage.setItem('admin_coords', JSON.stringify(c));
-        alert("座標を保存しました。画面を更新してください。");
+        alert(`${targets[id].name} 登録。リロードして確認。`);
+    }
+
+    function exportSettings() {
+        applyAdminOffsets();
+        const area = document.getElementById('export-area');
+        area.style.display = 'block';
+        area.value = JSON.stringify(targets, null, 4);
+        area.select();
+        document.execCommand('copy');
+        alert("現在の全座標をJSON形式で書き出しました。クリップボードにもコピーされています。これをHTMLの 'const targets = { ... };' の部分に貼り付けてください。");
     }
 
     function adminTrigger() { if (++tapCount >= 5) { document.getElementById('admin-panel').style.display = 'block'; tapCount = 0; } }
-    function resetAdminCoords() { if(confirm("管理者が設定した座標をリセットしますか？")){ localStorage.removeItem('admin_coords'); location.reload(); } }
+    function resetAdminCoords() { if(confirm("全リセット？")){ localStorage.removeItem('admin_coords'); location.reload(); } }
     function openModal(id) { document.getElementById('modalTitle').innerText=targets[id].name; document.getElementById('modalImg').src=targets[id].imgUrl; document.getElementById('modalBody').innerHTML=targets[id].description; document.getElementById('infoModal').style.display='flex'; }
     function closeModal() { document.getElementById('infoModal').style.display='none'; }
     function getDist(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
