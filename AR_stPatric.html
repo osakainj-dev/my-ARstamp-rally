@@ -40,11 +40,13 @@
         .stamp.active::before { content: '☘️'; font-size: 16px; }
         .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
 
-        /* 管理者パネルのスタイル */
+        /* 管理者パネル */
         #admin-panel { display: none; background: #333; color: white; padding: 15px; margin-top: 20px; border-radius: 10px; font-size: 12px; }
         .admin-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
         .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 10px; cursor: pointer; }
         .admin-btn.danger { background: #a22; }
+        .admin-btn.success { background: #007bff; }
+        #coords-output { width: 100%; height: 100px; margin-top: 10px; display: none; font-size: 8px; background: #000; color: #0f0; border: 1px solid #333; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
@@ -58,7 +60,7 @@
 
 <div class="container">
     <div class="title-image-container">
-        <img src="./logo.png" alt="Shamrock Rally Logo" class="title-image" id="logo-img" onclick="adminTrigger()">
+        <img src="./logo.png" alt="Logo" class="title-image" id="logo-img" onclick="adminTrigger()">
     </div>
 
     <div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
@@ -74,11 +76,16 @@
     <div class="goal-container" id="goal-area"></div>
 
     <div id="admin-panel">
-        <strong>🔧 現場座標調整モード</strong><br>
+        <strong>🔧 現場座標調整・出力モード</strong><br>
         <span id="current-gps-info">GPS取得中...</span>
         <div class="admin-ctrl" id="admin-buttons"></div>
-        <button class="admin-btn danger" style="width:100%; margin-top:10px;" onclick="resetAdminCoords()">調整をすべてリセット</button>
-        <p style="font-size: 9px; color: #ccc; margin-top: 10px;">※ここで設定した座標は、このブラウザのみに保存されます。テスト完了後、表示される数値をソースコードに反映してください。</p>
+        <hr style="border:0; border-top:1px solid #555; margin:10px 0;">
+        <div class="admin-ctrl">
+            <button class="admin-btn success" onclick="exportCoords()">📋 設定値を書き出す</button>
+            <button class="admin-btn" onclick="location.reload()">🔄 ページを再読み込み</button>
+        </div>
+        <textarea id="coords-output" readonly></textarea>
+        <button class="admin-btn danger" style="width:100%; margin-top:10px;" onclick="resetAdminCoords()">全調整をリセット</button>
     </div>
 </div>
 
@@ -92,35 +99,100 @@
 </div>
 
 <script>
-    // 元のターゲットデータ
+// 全スポットのデータ（スポット1のみ複数座標対応版）
     const targets = {
-        "1": { name: "三つ葉の広場", lat: 35.7725, lng: 139.6615, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1590076215667-873d3253503a?w=500", description: "<b>【シャムロック】</b><br>三つ葉のクローバーはアイルランドの国花。" },
-        "2": { name: "妖精の靴屋", lat: 35.6812, lng: 139.7671, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1599839619722-397514112634?w=500", description: "<b>【レプラコーン】</b><br>靴を直す妖精。" },
-        "3": { name: "ダブリンの扉", lat: 35.6924, lng: 139.6971, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1582234032482-628d7a868430?w=500", description: "<b>【カラフルなドア】</b>" },
-        "4": { name: "吟遊詩人の竪琴", lat: 35.7000, lng: 139.7000, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1595066601614-747f48037b52?w=500", description: "<b>【ハープ】</b>" },
-        "5": { name: "巨人の道", lat: 35.7100, lng: 139.7100, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1547432041-319985223030?w=500", description: "<b>【ジャイアンツ・コーズウェー】</b>" },
-        "6": { name: "ケルトの結び目", lat: 35.7200, lng: 139.7200, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1621236304191-382500028400?w=500", description: "<b>【永遠のシンボル】</b>" },
-        "7": { name: "羊の住む丘", lat: 35.7300, lng: 139.7300, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=500", description: "<b>【アランセーター】</b>" },
-        "8": { name: "スロンチャ！の鐘", lat: 35.7400, lng: 139.7400, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1559526323-cb2f2fe2591b?w=500", description: "<b>【Sláinte】</b>乾杯！" },
-        "9": { name: "守護聖人の書", lat: 35.7500, lng: 139.7500, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=500", description: "<b>【ケルズの書】</b>" },
-        "10": { name: "聖なる泉", lat: 35.7600, lng: 139.7600, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", description: "<b>【聖なる泉】</b>" },
-        "11": { name: "緑の谷", lat: 35.7700, lng: 139.7700, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", description: "<b>【緑の谷】</b>" },
-        "12": { name: "風の砦", lat: 35.7800, lng: 139.7800, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", description: "<b>【風の砦】</b>" },
-        "13": { name: "🌈 虹の麓の黄金", lat: 35.7600, lng: 139.7600, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", description: "<b>【コンプリート！】</b>" }
+        "1": { 
+            name: "三つ葉の広場", 
+            // 3箇所のうち、どこか1つに近づけばOK
+            locations: [
+                { lat: 35.7725, lng: 139.6615 }, // 1-A
+                { lat: 35.7730, lng: 139.6620 }, // 1-B
+                { lat: 35.7735, lng: 139.6625 }  // 1-C
+            ],
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1590076215667-873d3253503a?w=500", 
+            description: "<b>【シャムロック】</b><br>三つ葉のクローバーはアイルランドの国花。聖パトリックがキリスト教を広める際、この葉を使って説明したと言われています。" 
+        },
+        "2": { 
+            name: "妖精の靴屋", lat: 35.6812, lng: 139.7671, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1599839619722-397514112634?w=500", 
+            description: "<b>【レプラコーン】</b><br>一人で黙々と靴を直す妖精。彼を捕まえれば黄金の場所を教えてくれます。" 
+        },
+        "3": { 
+            name: "ダブリンの扉", lat: 35.6924, lng: 139.6971, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1582234032482-628d7a868430?w=500", 
+            description: "<b>【カラフルなドア】</b><br>18世紀から続くダブリンの伝統。隣の家と同じ色にならないように鮮やかに塗られました。" 
+        },
+        "4": { 
+            name: "吟遊詩人の竪琴", lat: 35.7000, lng: 139.7000, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1595066601614-747f48037b52?w=500", 
+            description: "<b>【アイリッシュ・ハープ】</b><br>アイルランドの国章にもなっている竪琴。国の魂として愛されています。" 
+        },
+        "5": { 
+            name: "巨人の道", lat: 35.7100, lng: 139.7100, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1547432041-319985223030?w=500", 
+            description: "<b>【ジャイアンツ・コーズウェー】</b><br>火山活動でできた不思議な六角形の石柱群。巨人が作ったという伝説があります。" 
+        },
+        "6": { 
+            name: "ケルトの結び目", lat: 35.7200, lng: 139.7200, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1621236304191-382500028400?w=500", 
+            description: "<b>【永遠のシンボル】</b><br>一筆書きのように途切れない模様は「永遠」を象徴しています。" 
+        },
+        "7": { 
+            name: "羊の住む丘", lat: 35.7300, lng: 139.7300, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=500", 
+            description: "<b>【アランセーターの故郷】</b><br>アラン諸島で編まれるセーターには、安全と大漁の願いが込められています。" 
+        },
+        "8": { 
+            name: "スロンチャ！の鐘", lat: 35.7400, lng: 139.7400, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1559526323-cb2f2fe2591b?w=500", 
+            description: "<b>【パブの文化】</b><br>「Sláinte（スロンチャ）」とは「あなたの健康に！」という意味の乾杯の言葉です。" 
+        },
+        "9": { 
+            name: "守護聖人の書", lat: 35.7500, lng: 139.7500, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=500", 
+            description: "<b>【ケルズの書】</b><br>世界で最も美しい本と呼ばれる、中世の豪華な写本です。" 
+        },
+        "10": { 
+            name: "聖なる泉", lat: 35.7600, lng: 139.7600, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", 
+            description: "<b>【聖なる泉】</b><br>アイルランド各地にある、癒やしの力があると信じられている泉です。" 
+        },
+        "11": { 
+            name: "緑の谷", lat: 35.7700, lng: 139.7700, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", 
+            description: "<b>【緑の谷】</b><br>エメラルドの島と呼ばれるにふさわしい、美しい自然の景色が広がります。" 
+        },
+        "12": { 
+            name: "風の砦", lat: 35.7800, lng: 139.7800, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", 
+            description: "<b>【風の砦】</b><br>断崖絶壁に建つ石造りの砦。古代の歴史を今に伝えています。" 
+        },
+        "13": { 
+            name: "🌈 虹の麓の黄金", lat: 35.7600, lng: 139.7600, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", 
+            description: "<b>【コンプリート！】</b><br>9つの知恵を集めました！虹の麓に隠された黄金を手にする資格は、あなたの好奇心そのものです。" 
+        }
     };
 
     let map, markers = {};
-    const storageKey = 'rally_locked_final_v13'; 
+    const storageKey = 'rally_locked_v14'; 
     const GOAL_ID = "13"; 
     const REQUIRED_COUNT = 9; 
     let tapCount = 0;
+    let currentLat, currentLng;
 
+    // 保存された座標の上書き適用
     function applyAdminOffsets() {
         const customCoords = JSON.parse(localStorage.getItem('admin_coords')) || {};
         for (let id in customCoords) {
             if (targets[id]) {
-                targets[id].lat = customCoords[id].lat;
-                targets[id].lng = customCoords[id].lng;
+                if (customCoords[id].locations) {
+                    targets[id].locations = customCoords[id].locations;
+                } else {
+                    targets[id].lat = customCoords[id].lat;
+                    targets[id].lng = customCoords[id].lng;
+                }
             }
         }
     }
@@ -146,21 +218,48 @@
                 gridMain.appendChild(div);
             }
 
-            // 管理者用ボタンの生成
-            const abtn = document.createElement('button');
-            abtn.className = 'admin-btn';
-            abtn.innerText = `[${id}]を現在地に設定`;
-            abtn.onclick = () => saveCurrentLocationAsTarget(id);
-            adminBtnContainer.appendChild(abtn);
+            // 管理者用ボタン生成
+            if (id === "1") {
+                ["A", "B", "C"].forEach((label, idx) => {
+                    const abtn = document.createElement('button');
+                    abtn.className = 'admin-btn';
+                    abtn.innerText = `[1-${label}]を設定`;
+                    abtn.onclick = () => saveCurrentLocation(id, idx);
+                    adminBtnContainer.appendChild(abtn);
+                });
+            } else {
+                const abtn = document.createElement('button');
+                abtn.className = 'admin-btn';
+                abtn.innerText = `[${id}]を設定`;
+                abtn.onclick = () => saveCurrentLocation(id);
+                adminBtnContainer.appendChild(abtn);
+            }
         }
         
-        map = L.map('map').setView([targets["1"].lat, targets["1"].lng], 13);
+        // 地図初期化
+        const center = targets["1"].locations ? targets["1"].locations[0] : targets["1"];
+        map = L.map('map').setView([center.lat, center.lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
+        // マーカー設置
         for (let id in targets) {
-            markers[id] = L.marker([targets[id].lat, targets[id].lng], {
-                icon: L.divIcon({ className:'custom-marker', html:(id==GOAL_ID ? '🔒' : '📍'), iconSize:[30,30] })
-            }).addTo(map).bindPopup(id==GOAL_ID ? `${REQUIRED_COUNT}個集めると解放！` : targets[id].name);
+            markers[id] = [];
+            const isGoal = (id == GOAL_ID);
+            const iconHtml = isGoal ? '🔒' : '📍';
+            
+            if (targets[id].locations) {
+                targets[id].locations.forEach(loc => {
+                    const m = L.marker([loc.lat, loc.lng], {
+                        icon: L.divIcon({ className:'custom-marker', html:iconHtml, iconSize:[30,30] })
+                    }).addTo(map).bindPopup(targets[id].name);
+                    markers[id].push(m);
+                });
+            } else {
+                const m = L.marker([targets[id].lat, targets[id].lng], {
+                    icon: L.divIcon({ className:'custom-marker', html:iconHtml, iconSize:[30,30] })
+                }).addTo(map).bindPopup(isGoal ? `${REQUIRED_COUNT}個集めると解放！` : targets[id].name);
+                markers[id].push(m);
+            }
         }
         updateDisplay();
         startGpsTracking();
@@ -175,19 +274,21 @@
             if(el) el.classList.add("active");
             const arLnk = document.getElementById("ar-link-" + id);
             if (arLnk) { arLnk.href = targets[id].arUrl; arLnk.style.display = "block"; }
-            if(id != GOAL_ID) markers[id].setIcon(L.divIcon({ className:'custom-marker', html:'☘️', iconSize:[30,30] }));
+            
+            if(id != GOAL_ID) {
+                markers[id].forEach(m => m.setIcon(L.divIcon({ className:'custom-marker', html:'☘️', iconSize:[30,30] })));
+            }
         });
 
-        const goalEl = document.getElementById("stamp-" + GOAL_ID);
         if (mainCount >= REQUIRED_COUNT) {
-            goalEl.classList.add("ready");
+            document.getElementById("stamp-" + GOAL_ID).classList.add("ready");
             document.getElementById("goal-name").innerText = targets[GOAL_ID].name;
             document.getElementById("goal-btns").style.display = "block"; 
-            markers[GOAL_ID].setIcon(L.divIcon({ className:'custom-marker', html:'🚩', iconSize:[30,30] }));
+            markers[GOAL_ID][0].setIcon(L.divIcon({ className:'custom-marker', html:'🚩', iconSize:[30,30] }));
         }
         if (stamps.includes(GOAL_ID)) {
-            goalEl.classList.add("active");
-            markers[GOAL_ID].setIcon(L.divIcon({ className:'custom-marker', html:'🌈', iconSize:[30,30] }));
+            document.getElementById("stamp-" + GOAL_ID).classList.add("active");
+            markers[GOAL_ID][0].setIcon(L.divIcon({ className:'custom-marker', html:'🌈', iconSize:[30,30] }));
         }
         document.getElementById("status").innerText = `集めたスタンプ: ${mainCount} / ${REQUIRED_COUNT}`;
     }
@@ -198,30 +299,39 @@
             let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
             const mainCount = stamps.filter(id => id != GOAL_ID).length;
             let foundId = null;
+
             for (let id in targets) {
-                const dist = getDistance(latitude, longitude, targets[id].lat, targets[id].lng);
-                if (dist < 0.05) { // 50メートル以内
+                const target = targets[id];
+                const isNear = target.locations 
+                    ? target.locations.some(loc => getDistance(latitude, longitude, loc.lat, loc.lng) < 0.05)
+                    : getDistance(latitude, longitude, target.lat, target.lng) < 0.05;
+
+                if (isNear) {
                     if (id == GOAL_ID && mainCount < REQUIRED_COUNT) { alert("まだゴールは開いていません！"); return; }
                     foundId = id; break;
                 }
             }
-            if (foundId) { saveStamp(foundId); updateDisplay(); alert("☘️ おめでとう！スタンプをゲット！"); }
-            else alert("近くにスポットがありません。地図の📍を目指してね"");
-        }, err => alert("位置情報が許可されていません"), {enableHighAccuracy: true});
+
+            if (foundId) {
+                if (!stamps.includes(foundId)) {
+                    stamps.push(foundId);
+                    localStorage.setItem(storageKey, JSON.stringify(stamps));
+                    updateDisplay();
+                    alert("☘️ おめでとう！スタンプゲット！");
+                } else { alert("ここは獲得済みです！"); }
+            } else { alert("近くにスポットがありません。もっと近づいてみてね。"); }
+        }, err => alert("GPSをオンにしてください"), {enableHighAccuracy: true});
     }
 
-    // --- 管理者用機能 ---
+    // --- 管理機能 ---
     function adminTrigger() {
-        tapCount++;
-        if (tapCount >= 5) {
+        if (++tapCount >= 5) {
             document.getElementById('admin-panel').style.display = 'block';
             window.scrollTo(0, document.body.scrollHeight);
-            alert("🔧 管理者モード：各スポットの座標を現在地に上書きできます。");
             tapCount = 0;
         }
     }
 
-    let currentLat, currentLng;
     function startGpsTracking() {
         navigator.geolocation.watchPosition(pos => {
             currentLat = pos.coords.latitude;
@@ -230,19 +340,27 @@
         }, null, {enableHighAccuracy: true});
     }
 
-    function saveCurrentLocationAsTarget(id) {
-        if (!currentLat) { alert("GPS取得中..."); return; }
+    function saveCurrentLocation(id, index = null) {
+        if (!currentLat) return;
         const customCoords = JSON.parse(localStorage.getItem('admin_coords')) || {};
-        customCoords[id] = { lat: currentLat, lng: currentLng };
+        
+        if (index !== null) { // 複数座標（スポット1など）
+            if (!customCoords[id]) customCoords[id] = { locations: [...targets[id].locations] };
+            customCoords[id].locations[index] = { lat: currentLat, lng: currentLng };
+        } else { // 単一座標
+            customCoords[id] = { lat: currentLat, lng: currentLng };
+        }
+        
         localStorage.setItem('admin_coords', JSON.stringify(customCoords));
-        
-        // データを即時反映
-        targets[id].lat = currentLat;
-        targets[id].lng = currentLng;
-        markers[id].setLatLng([currentLat, currentLng]);
-        map.panTo([currentLat, currentLng]);
-        
-        alert(`スポット[${id}] を現在の場所に設定しました。\n${currentLat}, ${currentLng}`);
+        alert(`スポット[${id}${index!==null?'-'+index:''}] を現在地に設定しました。再読み込みで反映します。`);
+    }
+
+    function exportCoords() {
+        const output = document.getElementById('coords-output');
+        output.style.display = 'block';
+        output.value = "const targets = " + JSON.stringify(targets, null, 2) + ";";
+        output.select();
+        alert("下のテキストエリアのコードをコピーして、GitHubのソースコードを書き換えてください。");
     }
 
     function resetAdminCoords() {
@@ -252,7 +370,7 @@
         }
     }
 
-    // --- ユーティリティ ---
+    // --- 共通 ---
     function openModal(id) {
         document.getElementById('modalTitle').innerText = targets[id].name;
         document.getElementById('modalImg').src = targets[id].imgUrl;
@@ -261,7 +379,6 @@
     }
     function closeModal() { document.getElementById('infoModal').style.display = 'none'; }
     function getDistance(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
-    function saveStamp(id){let stamps=JSON.parse(localStorage.getItem(storageKey))||[];if(!stamps.includes(id)){stamps.push(id);localStorage.setItem(storageKey,JSON.stringify(stamps));}}
     window.onload = init;
 </script>
 </body>
