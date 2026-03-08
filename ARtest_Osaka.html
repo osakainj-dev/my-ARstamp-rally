@@ -1,1 +1,243 @@
+/* 大阪のテスト用＿開発は本家ですること！！！ */
+/* 大阪のテスト用＿開発は本家ですること！！！ */
+/* 大阪のテスト用＿開発は本家ですること！！！ */
+/* 大阪のテスト用＿開発は本家ですること！！！ */
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>St. Patrick's Stamp Rally</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --irish-green: #009a49;
+            --gold: #ffcd00;
+            --dark-green: #00622d;
+            --cream: #f8f4e3;
+            --parchment: #fdf5e6;
+        }
 
+        body { font-family: 'Hiragino Kaku Gothic ProN', sans-serif; background-color: var(--cream); color: var(--dark-green); margin: 0; padding: 10px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border: 4px double var(--gold); border-radius: 15px; padding: 15px; box-sizing: border-box; }
+
+        /* --- タイトル画像エリアの修正 --- */
+        .title-image-container { 
+            text-align: center; 
+            margin-bottom: 15px; 
+            width: 100%;
+        }
+        .title-image { 
+            width: 100%;          /* コンテナの幅いっぱいに */
+            height: auto;         /* 高さは自動計算（歪まない） */
+            max-width: 450px;     /* 大きくなりすぎない制限 */
+            display: block;
+            margin: 0 auto;
+            border-radius: 10px;
+        }
+
+        #map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); }
+        .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; }
+        .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; }
+        .stamp.goal { width: 75%; border: 3px double #ccc; background: #eee; min-height: 140px; color: #999; margin: 0 auto; }
+        .stamp.goal.ready { border-color: var(--gold); background: #fffdf0; color: var(--dark-green); }
+        .goal-container { margin-top: 10px; text-align: center; }
+        .btn-ui { display: block; width: 90%; padding: 6px 0; margin: 2px 0; border-radius: 4px; font-size: 9px; font-weight: bold; text-decoration: none; text-align: center; cursor: pointer; }
+        .detail-btn { background: white; color: var(--dark-green); border: 1px solid var(--gold); }
+        .ar-btn { background: var(--irish-green); color: white; border: none; display: none; }
+        .stamp.active { border-style: solid; background: #e8f5e9; }
+        .stamp.active::before { content: '☘️'; font-size: 16px; }
+        .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 5px; right: 10px; font-size: 24px; cursor: pointer; }
+        .modal-image { width: 100%; height: 180px; object-fit: cover; border-radius: 5px; border: 2px solid var(--gold); margin: 10px 0; }
+        #status { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+        .custom-marker { font-size: 26px; text-align: center; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="title-image-container">
+        <img src="./logo.png" alt="Shamrock Rally Logo" class="title-image">
+    </div>
+
+  <div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
+    <p style="margin: 0; font-weight: bold;">街を巡ってARスタンプを集めよう！</p>
+    <p style="margin: 5px 0 0 0;">9つの知恵をコンプリートして、<br>
+        9つの知恵をコンプリートして、最終ポイントのロックを解除。<br>
+        虹の麓に隠されたゴールを目指せ！☘️</p>
+</div>
+    
+    <div id="map"></div>
+    <div id="status">スタンプを集めよう！</div>
+    <button class="check-btn" onclick="checkLocation()">現在地でスタンプ！</button>
+
+    <div class="stamp-grid" id="stamp-grid-main"></div>
+    <div class="goal-container" id="goal-area"></div>
+</div>
+
+<div id="infoModal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle" class="modal-title"></h2>
+        <img id="modalImg" class="modal-image" src="" alt="">
+        <div id="modalBody" class="modal-body"></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const targets = {
+        "1": { 
+            name: "三つ葉の広場", lat: 35.7725, lng: 139.6615, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
+            imgUrl: "https://images.unsplash.com/photo-1590076215667-873d3253503a?w=500", 
+            description: "<b>【シャムロック】</b><br>三つ葉のクローバーはアイルランドの国花。聖パトリックがキリスト教を広める際、この葉を使って説明したと言われています。" 
+        },
+        "2": { 
+            name: "妖精の靴屋", lat: 35.6812, lng: 139.7671, arUrl: "https://palanar.app/v2/ar_contents/copy_2c9648ec4f1ee40a", 
+            imgUrl: "https://images.unsplash.com/photo-1599839619722-397514112634?w=500", 
+            description: "<b>【レプラコーン】</b><br>一人で黙々と靴を直す妖精。彼を捕まえれば黄金の場所を教えてくれますが、目を離した隙に逃げてしまう知恵者です。" 
+        },
+        "3": { 
+            name: "ダブリンの扉", lat: 35.6924, lng: 139.6971, arUrl: "https://palanar.com/ar_contents/ifo2026_1", 
+            imgUrl: "https://images.unsplash.com/photo-1582234032482-628d7a868430?w=500", 
+            description: "<b>【カラフルなドア】</b><br>18世紀から続くダブリンの伝統。隣の家と同じ色にならないように、住人たちが競って鮮やかな色を塗ったのが始まりです。" 
+        },
+        "4": { 
+            name: "吟遊詩人の竪琴", lat: 35.7000, lng: 139.7000, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1595066601614-747f48037b52?w=500", 
+            description: "<b>【アイリッシュ・ハープ】</b><br>アイルランドの国章にもなっている竪琴。かつて吟遊詩人たちが王宮で奏でた美しい旋律は、今も国の魂として愛されています。" 
+        },
+        "5": { 
+            name: "巨人の道", lat: 35.7100, lng: 139.7100, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1547432041-319985223030?w=500", 
+            description: "<b>【ジャイアンツ・コーズウェー】</b><br>火山活動でできた不思議な六角形の石柱群。伝説では、巨人が敵に会いにスコットランドへ渡るために作った道だと言われています。" 
+        },
+        "6": { 
+            name: "ケルトの結び目", lat: 35.7200, lng: 139.7200, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1621236304191-382500028400?w=500", 
+            description: "<b>【永遠のシンボル】</b><br>一筆書きのように途切れない模様は「永遠」や「魂の繋がり」を象徴しています。ケルト文化が誇る、世界で最も美しい幾何学文様です。" 
+        },
+        "7": { 
+            name: "羊の住む丘", lat: 35.7300, lng: 139.7300, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=500", 
+            description: "<b>【アランセーターの故郷】</b><br>アイルランドの西海岸に浮かぶアラン諸島。ここで編まれるセーターの模様には、漁師たちの安全と大漁の願いが込められています。" 
+        },
+        "8": { 
+            name: "スロンチャ！の鐘", lat: 35.7400, lng: 139.7400, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1559526323-cb2f2fe2591b?w=500", 
+            description: "<b>【パブの文化】</b><br>アイルランドのパブは、音楽と会話を楽しむ第2の家。「Sláinte（スロンチャ）」とは「あなたの健康に！」という意味の乾杯の言葉です。" 
+        },
+        "9": { 
+            name: "守護聖人の書", lat: 35.7500, lng: 139.7500, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=500", 
+            description: "<b>【ケルズの書】</b><br>世界で最も美しい本と呼ばれる、中世の豪華な写本。トリニティ・カレッジに保管されているアイルランドの至宝の一つです。" 
+        },
+        "10": { 
+            name: "🌈 虹の麓の黄金", lat: 35.7600, lng: 139.7600, arUrl: "#", 
+            imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", 
+            description: "<b>【コンプリート！】</b><br>すべてのスタンプを集め、アイルランドの知恵を学びました！虹の麓に隠された黄金の壺を手にする資格は、あなたの好奇心そのものです。" 
+        }
+    };
+
+    let map, markers = {};
+    const storageKey = 'rally_locked_final_v3';
+
+    function init() {
+        const gridMain = document.getElementById('stamp-grid-main');
+        const goalArea = document.getElementById('goal-area');
+        for (let i = 1; i <= 10; i++) {
+            const div = document.createElement('div');
+            div.id = `stamp-${i}`;
+            if (i === 10) {
+                div.className = 'stamp goal';
+                div.innerHTML = `<span id="goal-name">🔒 9つのスタンプを集めて</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('10')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-10" target="_blank">☘️ AR</a></div>`;
+                goalArea.appendChild(div);
+            } else {
+                div.className = 'stamp';
+                div.innerHTML = `<span>${targets[i].name}</span><div class="btn-ui detail-btn" onclick="openModal('${i}')">🔍 解説</div><a href="#" id="ar-link-${i}" class="btn-ui ar-btn" target="_blank">☘️ AR</a>`;
+                gridMain.appendChild(div);
+            }
+        }
+        map = L.map('map').setView([targets["1"].lat, targets["1"].lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        for (let id in targets) {
+            markers[id] = L.marker([targets[id].lat, targets[id].lng], {
+                icon: L.divIcon({ className:'custom-marker', html:(id=="10"?'🔒':'📍'), iconSize:[30,30] })
+            }).addTo(map).bindPopup(id=="10" ? "9つ集めると解放！" : targets[id].name);
+        }
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const mainCount = stamps.filter(id => id != "10").length;
+        stamps.forEach(id => {
+            if(id == "10") return;
+            document.getElementById("stamp-" + id)?.classList.add("active");
+            
+            const arLnk = document.getElementById("ar-link-" + id);
+            if (arLnk) {
+                arLnk.href = targets[id].arUrl; // targetsデータからURLをセット
+                arLnk.style.display = "block";  // ボタンを表示
+            }
+            
+            markers[id].setIcon(L.divIcon({ className:'custom-marker', html:'☘️', iconSize:[30,30] }));
+        });
+        const goalEl = document.getElementById("stamp-10");
+        if (mainCount >= 9) {
+            goalEl.classList.add("ready");
+            document.getElementById("goal-name").innerText = targets["10"].name;
+            
+            const arLnk = document.getElementById("ar-link-" + id);
+            if (arLnk) {
+                arLnk.href = targets[id].arUrl; // targetsデータからURLをセット
+                arLnk.style.display = "block";  // ボタンを表示
+            }
+            
+            markers["10"].setIcon(L.divIcon({ className:'custom-marker', html:'🚩', iconSize:[30,30] }));
+            markers["10"].getPopup().setContent(targets["10"].name);
+        }
+        if (stamps.includes("10")) {
+            goalEl.classList.add("active");
+            document.getElementById("ar-link-10").style.display = "block";
+            markers["10"].setIcon(L.divIcon({ className:'custom-marker', html:'🌈', iconSize:[30,30] }));
+        }
+        document.getElementById("status").innerText = `集めたスタンプ: ${mainCount} / 9`;
+    }
+    
+// ロケーション判定
+    function checkLocation() {
+        navigator.geolocation.getCurrentPosition(pos => {
+            const { latitude, longitude } = pos.coords;
+            let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+            const mainCount = stamps.filter(id => id != "10").length;
+            let foundId = null;
+            for (let id in targets) {
+                const dist = getDistance(latitude, longitude, targets[id].lat, targets[id].lng);
+                if (dist < 0.05) {
+                    if (id == "10" && mainCount < 9) { alert("まだゴールは開いていません！"); return; }
+                    foundId = id; break;
+                }
+            }
+            if (foundId) { saveStamp(foundId); updateDisplay(); alert("☘️ おめでとう！スタンプをゲット！"); }
+            else alert("近くにスポットがありません。地図の📍を目指してね");
+        });
+    }
+
+    function openModal(id) {
+        document.getElementById('modalTitle').innerText = targets[id].name;
+        document.getElementById('modalImg').src = targets[id].imgUrl;
+        document.getElementById('modalBody').innerHTML = targets[id].description;
+        document.getElementById('infoModal').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('infoModal').style.display = 'none'; }
+    function getDistance(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+    function saveStamp(id){let stamps=JSON.parse(localStorage.getItem(storageKey))||[];if(!stamps.includes(id)){stamps.push(id);localStorage.setItem(storageKey,JSON.stringify(stamps));}}
+    window.onload = init;
+</script>
+</body>
+</html>
