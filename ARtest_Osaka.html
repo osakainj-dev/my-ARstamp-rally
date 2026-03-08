@@ -227,7 +227,22 @@ let targets = {
         const goalArea = document.getElementById('goal-area');
         const adminContainer = document.getElementById('admin-list-container');
         
-        for (let id in targets) {
+        for (let i = 1; i <= 13; i++) {
+            const id = String(i);
+            // スタンプ表示の生成
+            const div = document.createElement('div');
+            div.id = `stamp-${id}`;
+            if (id === GOAL_ID) {
+                div.className = 'stamp goal';
+                div.innerHTML = `<span id="goal-name">🔒 9つのスタンプを集めて</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-${id}" target="_blank">☘️ AR</a></div>`;
+                goalArea.appendChild(div);
+            } else {
+                div.className = 'stamp';
+                div.innerHTML = `<span>${targets[id].name}</span><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" id="ar-link-${id}" class="btn-ui ar-btn" target="_blank">☘️ AR</a>`;
+                gridMain.appendChild(div);
+            }
+        
+            for (let id in targets) {
             markers[id] = [];
             const target = targets[id];
             
