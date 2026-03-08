@@ -17,13 +17,19 @@
         body { font-family: 'Hiragino Kaku Gothic ProN', sans-serif; background-color: var(--cream); color: var(--dark-green); margin: 0; padding: 10px; }
         .container { max-width: 500px; margin: 0 auto; background: white; border: 4px double var(--gold); border-radius: 15px; padding: 15px; box-sizing: border-box; position: relative; }
 
-        .title-image-container { text-align: center; margin-bottom: 15px; width: 100%; }
+        .title-image-container { text-align: center; margin-bottom: 10px; width: 100%; }
         .title-image { width: 100%; height: auto; max-width: 450px; display: block; margin: 0 auto; border-radius: 10px; cursor: pointer; }
+
+        /* ガイドページボタン */
+        .guide-link-container { text-align: center; margin-bottom: 15px; }
+        .guide-btn { display: inline-block; padding: 8px 20px; background: white; color: var(--irish-green); border: 2px solid var(--irish-green); border-radius: 20px; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
+        .guide-btn:active { background: var(--irish-green); color: white; }
 
         #map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); background: #eee; }
         .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; }
         
-        .refresh-ui-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: white; border: 2px solid var(--gold); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 999; cursor: pointer; }
+        /* 更新ボタン：ホーム画面でも確実に出るよう z-index を高く設定 */
+        .refresh-ui-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: white; border: 2px solid var(--gold); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 9999; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
         .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
         .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; font-size: 11px; }
@@ -57,10 +63,14 @@
         <img src="./logo.png" alt="Logo" class="title-image" onclick="adminTrigger()">
     </div>
 
+    <div class="guide-link-container">
+        <a href="https://injosaka2026.my.canva.site/ifo-ar-top/" class="guide-btn" target="_blank">☘️ 遊び方ガイドを見る</a>
+    </div>
+
     <div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
         <p style="margin: 0; font-weight: bold;">街を巡ってARスタンプを集めよう！</p>
-        <p style="margin: 5px 0 0 0;">ちらばった12個のうち9つの知恵を集めると、<br>
-            コールポイントのロックが解除されるよ。<br>
+        <p style="margin: 5px 0 0 0;">9つの知恵をコンプリートして、<br>
+            最終ポイントのロックを解除。<br>
             虹の麓に隠されたゴールを目指せ！☘️</p>
     </div>
     
@@ -106,70 +116,22 @@
             imgUrl: "https://images.unsplash.com/photo-1590076215667-873d3253503a?w=500", 
             description: "<b>【シャムロック】</b><br>三つ葉のクローバーはアイルランドの国花。聖パトリックがキリスト教を広める際、この葉を使って説明したと言われています。" 
         },
-        "2": { 
-            name: "妖精の靴屋", lat: 35.6812, lng: 139.7671, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1599839619722-397514112634?w=500", 
-            description: "<b>【レプラコーン】</b><br>一人で黙々と靴を直す妖精。彼を捕まえれば黄金の場所を教えてくれます。" 
-        },
-        "3": { 
-            name: "ダブリンの扉", lat: 35.6924, lng: 139.6971, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1582234032482-628d7a868430?w=500", 
-            description: "<b>【カラフルなドア】</b><br>18世紀から続くダブリンの伝統。隣の家と同じ色にならないように鮮やかに塗られました。" 
-        },
-        "4": { 
-            name: "吟遊詩人の竪琴", lat: 35.7000, lng: 139.7000, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1595066601614-747f48037b52?w=500", 
-            description: "<b>【アイリッシュ・ハープ】</b><br>アイルランドの国章にもなっている竪琴。国の魂として愛されています。" 
-        },
-        "5": { 
-            name: "巨人の道", lat: 35.7100, lng: 139.7100, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1547432041-319985223030?w=500", 
-            description: "<b>【ジャイアンツ・コーズウェー】</b><br>火山活動でできた不思議な六角形の石柱群。巨人が作ったという伝説があります。" 
-        },
-        "6": { 
-            name: "ケルトの結び目", lat: 35.7200, lng: 139.7200, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1621236304191-382500028400?w=500", 
-            description: "<b>【永遠のシンボル】</b><br>一筆書きのように途切れない模様は「永遠」を象徴しています。" 
-        },
-        "7": { 
-            name: "羊の住む丘", lat: 35.7300, lng: 139.7300, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=500", 
-            description: "<b>【アランセーターの故郷】</b><br>アラン諸島で編まれるセーターには、安全と大漁の願いが込められています。" 
-        },
-        "8": { 
-            name: "スロンチャ！の鐘", lat: 35.7400, lng: 139.7400, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1559526323-cb2f2fe2591b?w=500", 
-            description: "<b>【パブの文化】</b><br>「Sláinte（スロンチャ）」とは「あなたの健康に！」という意味の乾杯の言葉です。" 
-        },
-        "9": { 
-            name: "守護聖人の書", lat: 35.7500, lng: 139.7500, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=500", 
-            description: "<b>【ケルズの書】</b><br>世界で最も美しい本と呼ばれる、中世の豪華な写本です。" 
-        },
-        "10": { 
-            name: "聖なる泉", lat: 35.7600, lng: 139.7600, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", 
-            description: "<b>【聖なる泉】</b><br>アイルランド各地にある、癒やしの力があると信じられている泉です。" 
-        },
-        "11": { 
-            name: "緑の谷", lat: 35.7700, lng: 139.7700, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", 
-            description: "<b>【緑の谷】</b><br>エメラルドの島と呼ばれるにふさわしい、美しい自然の景色が広がります。" 
-        },
-        "12": { 
-            name: "風の砦", lat: 35.7800, lng: 139.7800, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", 
-            description: "<b>【風の砦】</b><br>断崖絶壁に建つ石造りの砦。古代の歴史を今に伝えています。" 
-        },
-        "13": { 
-            name: "🌈 虹の麓の黄金", lat: 35.7600, lng: 139.7600, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-            imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", 
-            description: "<b>【コンプリート！】</b><br>9つの知恵を集めました！虹の麓に隠された黄金を手にする資格は、あなたの好奇心そのものです。" 
-        }
+        "2": { name: "妖精の靴屋", lat: 35.6812, lng: 139.7671, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1599839619722-397514112634?w=500", description: "<b>【レプラコーン】</b><br>一人で黙々と靴を直す妖精。彼を捕まえれば黄金の場所を教えてくれます。" },
+        "3": { name: "ダブリンの扉", lat: 35.6924, lng: 139.6971, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1582234032482-628d7a868430?w=500", description: "<b>【カラフルなドア】</b><br>18世紀から続くダブリンの伝統。隣の家と同じ色にならないように鮮やかに塗られました。" },
+        "4": { name: "吟遊詩人の竪琴", lat: 35.7000, lng: 139.7000, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1595066601614-747f48037b52?w=500", description: "<b>【アイリッシュ・ハープ】</b><br>アイルランドの国章にもなっている竪琴。国の魂として愛されています。" },
+        "5": { name: "巨人の道", lat: 35.7100, lng: 139.7100, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1547432041-319985223030?w=500", description: "<b>【ジャイアンツ・コーズウェー】</b><br>火山活動でできた不思議な六角形の石柱群。巨人が作ったという伝説があります。" },
+        "6": { name: "ケルトの結び目", lat: 35.7200, lng: 139.7200, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1621236304191-382500028400?w=500", description: "<b>【永遠のシンボル】</b><br>一筆書きのように途切れない模様は「永遠」を象徴しています。" },
+        "7": { name: "羊の住む丘", lat: 35.7300, lng: 139.7300, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=500", description: "<b>【アランセーターの故郷】</b><br>アラン諸島で編まれるセーターには、安全と大漁の願いが込められています。" },
+        "8": { name: "スロンチャ！の鐘", lat: 35.7400, lng: 139.7400, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1559526323-cb2f2fe2591b?w=500", description: "<b>【パブの文化】</b><br>「Sláinte（スロンチャ）」とは「あなたの健康に！」という意味の乾杯の言葉です。" },
+        "9": { name: "守護聖人の書", lat: 35.7500, lng: 139.7500, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=500", description: "<b>【ケルズの書】</b><br>世界で最も美しい本と呼ばれる、中世の豪華な写本です。" },
+        "10": { name: "聖なる泉", lat: 35.7600, lng: 139.7600, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", description: "<b>【聖なる泉】</b><br>アイルランド各地にある、癒やしの力があると信じられている泉です。" },
+        "11": { name: "緑の谷", lat: 35.7700, lng: 139.7700, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", description: "<b>【緑の谷】</b><br>エメラルドの島と呼ばれるにふさわしい、美しい自然の景色が広がります。" },
+        "12": { name: "風の砦", lat: 35.7800, lng: 139.7800, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", description: "<b>【風の砦】</b><br>断崖絶壁に建つ石造りの砦。古代の歴史を今に伝えています。" },
+        "13": { name: "🌈 虹の麓の黄金", lat: 35.7600, lng: 139.7600, arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", imgUrl: "https://images.unsplash.com/photo-1518005020951-ecc84916723f?w=500", description: "<b>【コンプリート！】</b><br>9つの知恵を集めました！虹の麓に隠された黄金を手にする資格は、あなたの好奇心そのものです。" }
     };
 
     let map, markers = {};
-    const storageKey = 'rally_v30_final'; 
+    const storageKey = 'rally_v35_final'; 
     const GOAL_ID = "13"; 
     const REQUIRED_COUNT = 9; 
     let tapCount = 0;
