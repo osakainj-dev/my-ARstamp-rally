@@ -239,7 +239,12 @@
         // 地図初期化
         const center = targets["1"].locations ? targets["1"].locations[0] : targets["1"];
         map = L.map('map').setView([center.lat, center.lng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+       // 【修正後：軽量で読み込みが早いタイルに変更】
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap contributors © CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
 
         // マーカー設置
         for (let id in targets) {
