@@ -205,8 +205,8 @@
                     foundId = id; break;
                 }
             }
-            if (foundId) { saveStamp(foundId); updateDisplay(); alert("☘️ スタンプゲット！"); }
-            else alert("近くにスポットがありません。");
+            if (foundId) { saveStamp(foundId); updateDisplay(); alert("☘️ おめでとう！スタンプをゲット！"); }
+            else alert("近くにスポットがありません。地図の📍を目指してね"");
         }, err => alert("位置情報が許可されていません"), {enableHighAccuracy: true});
     }
 
