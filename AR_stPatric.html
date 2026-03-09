@@ -38,15 +38,30 @@
         .detail-btn { background: white; color: var(--dark-green); border: 1px solid var(--gold); }
         .ar-btn { background: var(--irish-green); color: white; border: none; display: none; }
         
-        .stamp.active { border-style: solid; background: #e8f5e9; }
+        .stamp.active { border-style: solid; }
         .stamp.active::before { content: '☘️'; font-size: 16px; }
         .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
+
+        /* 虹グラデーション（3列×4行、1〜12番） */
+        .stamp-color-1  { background: #fff0f0; } /* 赤 */
+        .stamp-color-2  { background: #fff4f0; }
+        .stamp-color-3  { background: #fff8f0; } /* オレンジ */
+        .stamp-color-4  { background: #fffbf0; }
+        .stamp-color-5  { background: #fffff0; } /* 黄 */
+        .stamp-color-6  { background: #f8fff0; }
+        .stamp-color-7  { background: #f0fff0; } /* 黄緑 */
+        .stamp-color-8  { background: #f0fff4; }
+        .stamp-color-9  { background: #f0fff8; } /* 緑 */
+        .stamp-color-10 { background: #f0f8ff; } /* 水色 */
+        .stamp-color-11 { background: #f0f0ff; } /* 青 */
+        .stamp-color-12 { background: #f8f0ff; } /* 紫 */
 
         #admin-panel { display: none; background: #333; color: white; padding: 15px; margin-top: 20px; border-radius: 10px; font-size: 12px; }
         .admin-row { border-bottom: 1px dotted #666; padding: 10px 0; display: flex; flex-direction: column; gap: 5px; }
         .admin-btn-group { display: flex; gap: 5px; }
         .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; }
         .reset-item-btn { background: #a55; border-color: #f77; max-width: 60px; }
+        .acquire-item-btn { background: #2a7; border-color: #4d9; max-width: 60px; }
         .export-area { width: 100%; height: 100px; margin-top: 10px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; display: none; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
@@ -128,7 +143,7 @@
                 { lat: 34.6735,    lng: 135.5015 }    // 心斎橋
             ],
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
-            imgUrl: "./logo.png", imgIreland: "./logo.png",
+            imgUrl: "./spot1.png", imgIreland: "",
             description: `<b>【シャムロック】</b><br>
                 三つ葉のクローバーはアイルランドの国花。聖パトリックがキリスト教を広める際、この葉を使って説明したと言われています。
                 <br><small>THE BLARNEY STONE<br>
@@ -138,7 +153,7 @@
             name: "ダブリンの扉<br>(Dublin Bay)",
             lat: 34.6688496, lng: 135.4998615,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
-            imgUrl: "./logo.png", imgIreland: "./logo.png",
+            imgUrl: "./spot2.png", imgIreland: "",
             description: `<b>【カラフルなドア】</b><br>
                 18世紀から続くダブリンの伝統。隣の家と同じ色にならないように鮮やかに塗られました。
                 <br><small>Dublin Bay<br>
@@ -185,7 +200,7 @@
                 <br><small>※外観見学は自由ですが、夜間は足元にご注意ください</small>`
         },
         "7": {
-            name: "黄金の輪<br>(知恩院・マグナスリン前)",
+            name: "黄金の輪<br>(知恩院・マグナス前)",
             lat: 35.0048, lng: 135.7821,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot7.png", imgIreland: "",
@@ -216,13 +231,13 @@
                 <br><small>※開館時間（9:00〜17:00）にお越しください</small>`
         },
         "10": {
-            name: "聖なる泉<br>(梅田スカイビル　中自然の森)",
+            name: "聖なる泉<br>(スカイビル・中自然の森)",
             lat: 34.7052872, lng: 135.4896527,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot10.png", imgIreland: "",
             description: `<b>【ホーリー・ウェル】</b><br>
                 アイルランド各地にある、癒やしの力があると信じられている聖なる泉。
-                都会に湧く水に、その祈りを重ねて。
+                都会の中に湧く緑と水。その静けさに祈りを重ねて。
                 <br><small>※24時間訪問可能です</small>`
         },
         "11": {
@@ -236,7 +251,7 @@
                 <br><small>※建物周辺の見学は自由です</small>`
         },
         "12": {
-            name: "風の砦<br>大阪ステーションシティ　風の広場)",
+            name: "風の砦<br>(ノースゲート・スカイガーデン)",
             lat: 34.7030158, lng: 135.4954248,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot12.png", imgIreland: "",
@@ -289,7 +304,8 @@
                 div.innerHTML = `<span id="goal-name">🔒 9つのスタンプを集めて</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-${id}" target="_blank">☘️ AR</a></div>`;
                 goalArea.appendChild(div);
             } else {
-                div.className = 'stamp';
+                div.className = `stamp stamp-color-${id}`;
+                div.style.background = 'white'; // 未取得時は白
                 div.innerHTML = `<span>${targets[id].name}</span><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" id="ar-link-${id}" class="btn-ui ar-btn" target="_blank">☘️ AR</a>`;
                 gridMain.appendChild(div);
             }
@@ -315,9 +331,15 @@
                 btn.onclick = () => saveLoc(id);
                 group.appendChild(btn);
             }
+            const acquireBtn = document.createElement('button');
+            acquireBtn.className = 'admin-btn acquire-item-btn';
+            acquireBtn.innerText = '取得済み';
+            acquireBtn.onclick = () => acquireSingleStamp(id);
+            group.appendChild(acquireBtn);
+
             const resetBtn = document.createElement('button');
             resetBtn.className = 'admin-btn reset-item-btn';
-            resetBtn.innerText = `クリア`;
+            resetBtn.innerText = '解除';
             resetBtn.onclick = () => resetSingleStamp(id);
             group.appendChild(resetBtn);
             row.appendChild(group);
@@ -418,14 +440,20 @@
         let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
         const mainCount = stamps.filter(id => id != GOAL_ID).length;
         
+        // 全スタンプをリセット（未取得→白背景）
         for (let i = 1; i <= 13; i++) {
-            document.getElementById("stamp-" + i)?.classList.remove("active");
+            const el = document.getElementById("stamp-" + i);
+            el?.classList.remove("active");
+            if (el && i < 13) el.style.background = 'white';
             const ar = document.getElementById("ar-link-" + i);
             if (ar) ar.style.display = "none";
         }
 
+        // 取得済みスタンプに虹色を適用
         stamps.forEach(id => {
-            document.getElementById("stamp-" + id)?.classList.add("active");
+            const el = document.getElementById("stamp-" + id);
+            el?.classList.add("active");
+            if (el && id != GOAL_ID) el.style.background = ''; // CSSクラスの色を有効化
             const ar = document.getElementById("ar-link-" + id);
             if (ar) { ar.href = targets[id].arUrl; ar.style.display = "block"; }
             markers[id].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:(id==GOAL_ID?'🌈':'☘️'), iconSize:[30,30]})));
@@ -459,6 +487,18 @@
         }
         localStorage.setItem('admin_coords', JSON.stringify(c));
         alert(`${targets[id].name} を現在の座標で登録しました。画面を更新して反映してください。`);
+    }
+
+    function acquireSingleStamp(id) {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        if (!stamps.includes(id)) {
+            stamps.push(id);
+            localStorage.setItem(storageKey, JSON.stringify(stamps));
+            updateDisplay();
+            alert(targets[id].name + ' を取得済みにしました。');
+        } else {
+            alert('すでに取得済みです。');
+        }
     }
 
     function resetSingleStamp(id) {
