@@ -346,23 +346,38 @@
             }
         }
         updateDisplay();
-        startGps();
-    }
+let userMarker = null;
 
-    function startGps() {
-        const opt = { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 };
-        navigator.geolocation.watchPosition(
-            pos => {
-                currentLat = pos.coords.latitude;
-                currentLng = pos.coords.longitude;
-                document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
-            },
-            err => {
-                document.getElementById('current-gps-info').innerText = `GPS取得失敗: ${err.message}`;
-            },
-            opt
-        );
-    }
+function startGps() {
+    const opt = { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 };
+    navigator.geolocation.watchPosition(
+        pos => {
+            currentLat = pos.coords.latitude;
+            currentLng = pos.coords.longitude;
+            document.getElementById('current-gps-info').innerText = 
+                `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+
+            // 現在地マーカーを更新
+            if (userMarker) {
+                userMarker.setLatLng([currentLat, currentLng]);
+            } else {
+                userMarker = L.marker([currentLat, currentLng], {
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: '📱',
+                        iconSize: [30, 30]
+                    }),
+                    zIndexOffset: 1000  // 他のマーカーより手前に表示
+                }).addTo(map).bindPopup('現在地');
+            }
+        },
+        err => {
+            document.getElementById('current-gps-info').innerText = 
+                `GPS取得失敗: ${err.message}`;
+        },
+        opt
+    );
+}
 
     function checkLocation() {
         if (!currentLat) { alert("GPSを取得中です。少し待ってからもう一度お試しください。"); return; }
