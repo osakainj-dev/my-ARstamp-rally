@@ -128,7 +128,7 @@
                 { lat: 34.6735,    lng: 135.5015 }    // 心斎橋
             ],
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
-            imgUrl: "./img/logo.png", imgIreland: "./img/logo.png",
+            imgUrl: "./spot1.png", imgIreland: "",
             description: `<b>【シャムロック】</b><br>
                 三つ葉のクローバーはアイルランドの国花。聖パトリックがキリスト教を広める際、この葉を使って説明したと言われています。
                 <br><small>THE BLARNEY STONE<br>
@@ -138,7 +138,7 @@
             name: "ダブリンの扉<br>(Dublin Bay)",
             lat: 34.6688496, lng: 135.4998615,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
-            imgUrl: "./img/logo.png", imgIreland: "./img/logo.png",
+            imgUrl: "./spot2.png", imgIreland: "",
             description: `<b>【カラフルなドア】</b><br>
                 18世紀から続くダブリンの伝統。隣の家と同じ色にならないように鮮やかに塗られました。
                 <br><small>Dublin Bay<br>
@@ -185,7 +185,7 @@
                 <br><small>※外観見学は自由ですが、夜間は足元にご注意ください</small>`
         },
         "7": {
-            name: "黄金の輪<br>(知恩院・マグナス前)",
+            name: "黄金の輪<br>(知恩院・マグナスリン前)",
             lat: 35.0048, lng: 135.7821,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot7.png", imgIreland: "",
@@ -216,7 +216,7 @@
                 <br><small>※開館時間（9:00〜17:00）にお越しください</small>`
         },
         "10": {
-            name: "聖なる泉<br>(スカイビル噴水)",
+            name: "聖なる泉<br>(梅田スカイビル　中自然の森)",
             lat: 34.7052872, lng: 135.4896527,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot10.png", imgIreland: "",
@@ -236,7 +236,7 @@
                 <br><small>※建物周辺の見学は自由です</small>`
         },
         "12": {
-            name: "風の砦<br>大阪ステーションcity 風の広場)",
+            name: "風の砦<br>大阪ステーションシティ　風の広場)",
             lat: 34.7030158, lng: 135.4954248,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot12.png", imgIreland: "",
@@ -257,7 +257,7 @@
         }
     };
 
-    let map, markers = {};
+    let map, markers = {}, userMarker = null;
     const storageKey = 'rally_v2026_final';
     const GOAL_ID = "13";
     const REQUIRED_COUNT = 9;
@@ -346,38 +346,37 @@
             }
         }
         updateDisplay();
-let userMarker = null;
+        startGps();
+    }
 
-function startGps() {
-    const opt = { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 };
-    navigator.geolocation.watchPosition(
-        pos => {
-            currentLat = pos.coords.latitude;
-            currentLng = pos.coords.longitude;
-            document.getElementById('current-gps-info').innerText = 
-                `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+    function startGps() {
+        const opt = { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 };
+        navigator.geolocation.watchPosition(
+            pos => {
+                currentLat = pos.coords.latitude;
+                currentLng = pos.coords.longitude;
+                document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
 
-            // 現在地マーカーを更新
-            if (userMarker) {
-                userMarker.setLatLng([currentLat, currentLng]);
-            } else {
-                userMarker = L.marker([currentLat, currentLng], {
-                    icon: L.divIcon({
-                        className: 'custom-marker',
-                        html: '📱',
-                        iconSize: [30, 30]
-                    }),
-                    zIndexOffset: 1000  // 他のマーカーより手前に表示
-                }).addTo(map).bindPopup('現在地');
-            }
-        },
-        err => {
-            document.getElementById('current-gps-info').innerText = 
-                `GPS取得失敗: ${err.message}`;
-        },
-        opt
-    );
-}
+                // 現在地マーカーを更新（初回は作成、2回目以降は移動）
+                if (userMarker) {
+                    userMarker.setLatLng([currentLat, currentLng]);
+                } else {
+                    userMarker = L.marker([currentLat, currentLng], {
+                        icon: L.divIcon({
+                            className: 'custom-marker',
+                            html: '📱',
+                            iconSize: [30, 30]
+                        }),
+                        zIndexOffset: 1000
+                    }).addTo(map).bindPopup('現在地');
+                }
+            },
+            err => {
+                document.getElementById('current-gps-info').innerText = `GPS取得失敗: ${err.message}`;
+            },
+            opt
+        );
+    }
 
     function checkLocation() {
         if (!currentLat) { alert("GPSを取得中です。少し待ってからもう一度お試しください。"); return; }
