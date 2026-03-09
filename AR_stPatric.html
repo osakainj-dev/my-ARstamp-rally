@@ -49,29 +49,14 @@
         .reset-item-btn { background: #a55; border-color: #f77; max-width: 60px; }
         .export-area { width: 100%; height: 100px; margin-top: 10px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; display: none; }
 
-        /* モーダル */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
         .modal-close { position: absolute; top: 5px; right: 10px; font-size: 24px; cursor: pointer; }
         .modal-image { width: 100%; height: 180px; object-fit: cover; border-radius: 5px; border: 2px solid var(--gold); margin: 10px 0; }
 
-        /* タブ */
         .tab-container { display: flex; gap: 8px; margin-bottom: 4px; }
-        .tab-btn {
-            flex: 1;
-            padding: 6px;
-            border-radius: 20px;
-            border: 2px solid var(--irish-green);
-            background: white;
-            color: var(--irish-green);
-            font-weight: bold;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-        .tab-btn.active {
-            background: var(--irish-green);
-            color: white;
-        }
+        .tab-btn { flex: 1; padding: 6px; border-radius: 20px; border: 2px solid var(--irish-green); background: white; color: var(--irish-green); font-weight: bold; font-size: 0.8rem; cursor: pointer; }
+        .tab-btn.active { background: var(--irish-green); color: white; }
 
         #status { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
         .custom-marker { font-size: 26px; text-align: center; cursor: pointer; line-height: 1; }
@@ -115,163 +100,167 @@
 
 <div class="refresh-ui-btn" onclick="location.reload()">🔄</div>
 
-<!-- モーダル -->
 <div id="infoModal" class="modal-overlay" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <span class="modal-close" onclick="closeModal()">&times;</span>
         <h2 id="modalTitle" style="margin-top:0;"></h2>
-
-        <!-- タブボタン（アイルランド写真がある場合のみ表示） -->
         <div class="tab-container" id="modal-tabs">
             <button class="tab-btn active" id="tab-local"   onclick="switchTab('local')">📍 現地</button>
             <button class="tab-btn"        id="tab-ireland" onclick="switchTab('ireland')">🍀 アイルランド</button>
         </div>
-
-        <!-- 現地写真 -->
         <img id="modalImg" class="modal-image" src="">
-        <!-- アイルランド写真 -->
         <img id="modalImgIreland" class="modal-image" src="" style="display:none;">
-
         <div id="modalBody"></div>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    // GPS判定距離（km）50m = 0.05
+    const GPS_RADIUS_KM = 0.05;
+
     let targets = {
-        "1": { name: "三つ葉の広場<br>(THE BLARNEY STONE)", 
-              locations: [{ lat: 34.7006, lng: 135.4942 }, 
-                          { lat: 34.7010, lng: 135.5005 }, 
-                          { lat: 34.6735, lng: 135.5015 }], 
-              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-              imgUrl: "./img/2024, St. Patrick's Festival, Parade, Inishowen Critters, Dublin City_TI717WN.jpg",
-              imgIreland: "./img/firy.jpg",
-              description: `<b>【シャムロック】</b>
-            　<br>三つ葉のクローバーはアイルランドの国花。聖パトリックがキリスト教を広める際、この葉を使って説明したと言われています。
-                            <br><small>THE BLARNEY STONE <br>
-                            （KITTE/お初天神/心斎橋）３つどこの店舗でも取得できます </small>` },
-                  
-        "2": { name: "妖精の靴屋 <br>(くいだおれ太郎)",
-              lat: 34.6685, lng: 135.5035, 
-              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-              imgUrl: "./logo.png",
-              imgIreland: "./img/firy.jpg",
-              description: `<b>【レプラコーン】</b><br>
-                        一人で黙々と靴を直す妖精。彼を捕まえれば黄金の場所を教えてくれます。
-                         <br><small>★★
-                         <br>※</small>`},
-        
-        "3": { name: "ダブリンの扉 <br>(Dublin Bay)",
-              lat: 34.6690, lng: 135.5005, 
-              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-              imgUrl: "./spot3.png",
-              imgIreland: "",
-              description: `<b>【カラフルなドア】</b><br>
-                        18世紀から続くダブリンの伝統。隣の家と同じ色にならないように鮮やかに塗られました。<br>
-                         <small>Dublin Bay<br>
-                         ※営業時間（17:00〜24:00頃）営業時間外も外から取得できます</small>`},
-        
-        "4": { name: "吟遊詩人の竪琴 <br>(法善寺横丁)",
-              lat: 34.6675, lng: 135.5025, 
-              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-              imgUrl: "./spot4.png",
-              imgIreland: "",
-              description: `<b>【アイリッシュ・ハープ】</b><br>
-                　　アイルランドの国章にもなっているハープ。国の魂として愛されています。<br>
-                  石畳の路地に響くハープの音色。国の魂として愛される楽器です。<br>
-                  <small>※参拝可能時間にお越しください。</small>` },
-        
-        "5": { name: "巨人の道 <br>(大阪松竹座)",
-              lat: 34.6685, lng: 135.5015, 
-              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-              imgUrl: "./spot5.png",
-              imgIreland: "",
-              description: `<b>【ジャイアンツ・コーズウェー】</b><br>
-            火山活動でできた不思議な六角形の石柱群。巨人が作ったという伝説があります。<br>
-            世界遺産の奇岩を思わせる石柱。巨人の伝説が息づく場所です。<br>
-            <small>※建物周辺は24時間訪問可能です。</small>`  },
-        
-        "6": { name: "ケルトの結び目<br> (中之島公会堂)",
-              lat: 34.6935, lng: 135.5035, 
-              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-              imgUrl: "./spot6.png",
-              imgIreland: "",
-              description: `<b>【永遠のシンボル】</b><br>
-            一筆書きのように途切れない模様は「永遠」を象徴しています。<br>
-            <small>※外観見学は自由ですが、夜間は足元にご注意ください。</small>`  },
-        
-        "7": { name: "羊の住む丘 <br>(知恩院(マグナス前))",
-              lat: 35.0048, lng: 135.7821, 
-              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-              imgUrl: "./spot7.png",
-              imgIreland: "",
-              description: `<b>【アランセーターの故郷】</b><br>
-            アラン諸島で編まれるセーターには、安全と大漁の願いが込められています。<br>
-            万博から来た羊「マグナス・リン」がお出迎え。アラン諸島の丘の風景です。<br>
-            <small>※開門時間（9:00〜16:00頃）にお越しください。</small>` },
-        
-        "8": { name: "スロンチャ！ <br>(★)",
-              lat: 34.6685, lng: 135.5035, 
-              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-              imgUrl: "./spot8.png",
-              imgIreland: "",
-              description: `<b>【パブの文化】</b><br>
-            「Sláinte（スロンチャ）」とは「あなたの健康に！」という意味の乾杯の言葉です。「乾杯（スロンチャ）！」の声が響く。
-            <br><small>　★</small>` },
-        
-        "9": { name: "守護聖人の書<br>（神戸・メリケン広場)",
-              lat: 34.6825, lng: 135.1875, 
-              arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-              imgUrl: "./spot9.png",
-              imgIreland: "",
-              description: `<b>【ケルズの書】</b><br>
-            世界で最も美しい本と呼ばれる、中世の豪華な写本です。
-            世界一美しい本「ケルズの書」。港町に届いた異国の芸術を想います。<br>
-            <small>※公園エリアのため24時間訪問可能です。</small>` },
-        
-        "10": { name: "聖なる泉 <br>(うめきた)",
-               lat: 34.7037078, lng: 135.4944784, 
-               arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-               imgUrl: "./spot10.png",
-               imgIreland: "",
-               description: `<b>【聖なる泉】</b><br>
-            アイルランド各地にある、癒やしの力があると信じられている泉です。都会に湧く水。各地にある癒やしの力を持つ「ホーリー・ウェル」に見立てて。
-            <br><small>※広場のため24時間訪問可能です。</small>` },
-        
-        "11": { name: "緑の谷 <br>(御堂会館)",
-               lat: 34.6805, lng: 135.4995, 
-               arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-               imgUrl: "./spot11.png",
-               imgIreland: "",
-               description: `<b>【緑の谷】</b><br>
-            エメラルドの島と呼ばれるにふさわしい、美しい自然の景色が広がります。<br>
-            重厚な建物の静寂は、エメラルドの島の深く穏やかな谷（グレン）のよう。
-            <small>※建物周辺の見学は自由です。</small>` },
-        
-        "12": { name: "風の砦 <br>(風の広場)",
-               lat: 34.7037171, lng: 135.4951532, 
-               arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-               imgUrl: "./spot12.png",
-               imgIreland: "",
-               description: `<b>【風の砦】</b><br>
-              断崖絶壁に建つ石造りの砦。古代の歴史を今に伝えています。吹き抜ける風とビル群。断崖絶壁に建つ石造りの砦のような迫力です。<br>
-              <small>※開放時間（10:00〜20:00頃）にご注意ください。</small>` },
-        
-        "13": { name: "🌈 虹の麓の黄金 <br>(ゴール)",
-               lat: 34.6691, lng: 135.5033, 
-               arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2", 
-               imgUrl: "./goal.png",
-               imgIreland: "",
-               description: `<b>【コンプリート！】</b><br>
-            9つの知恵を集めました！虹の麓に隠された黄金を手にする資格は、あなたの好奇心そのものです。<br>
-            おめでとう！9つの知恵を集めたあなたに、虹の麓の黄金が輝きます。
-            <small>※最終ゴール地点の開放時間に準じます。</small>` }
+        "1": {
+            name: "三つ葉の広場<br>(THE BLARNEY STONE)",
+            locations: [
+                { lat: 34.7006,    lng: 135.4942 },   // KITTE大阪
+                { lat: 34.7010,    lng: 135.5005 },   // お初天神
+                { lat: 34.6735,    lng: 135.5015 }    // 心斎橋
+            ],
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./img/logo.png", imgIreland: "./img/logo.png",
+            description: `<b>【シャムロック】</b><br>
+                三つ葉のクローバーはアイルランドの国花。聖パトリックがキリスト教を広める際、この葉を使って説明したと言われています。
+                <br><small>THE BLARNEY STONE<br>
+                （KITTE/お初天神/心斎橋）３つどこの店舗でも取得できます</small>`
+        },
+        "2": {
+            name: "ダブリンの扉<br>(Dublin Bay)",
+            lat: 34.6688496, lng: 135.4998615,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./img/logo.png", imgIreland: "./img/logo.png",
+            description: `<b>【カラフルなドア】</b><br>
+                18世紀から続くダブリンの伝統。隣の家と同じ色にならないように鮮やかに塗られました。
+                <br><small>Dublin Bay<br>
+                ※営業時間（17:00〜24:00頃）営業時間外も外から取得できます</small>`
+        },
+        "3": {
+            name: "リバーダンスの舞台<br>(なんばグランド花月)",
+            lat: 34.6649869, lng: 135.5036556,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./spot3.png", imgIreland: "",
+            description: `<b>【リバーダンス】</b><br>
+                1994年のユーロビジョン・ソング・コンテストで世界を驚かせたアイルランドの伝統舞踊ショー。
+                力強いタップと躍動するダンサーたちは、まさにエンターテインメントの極致。
+                この舞台にもそのエネルギーが宿ります。
+                <br><small>※建物外から取得可能です</small>`
+        },
+        "4": {
+            name: "吟遊詩人の竪琴<br>(法善寺横丁)",
+            lat: 34.6675, lng: 135.5025,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./spot4.png", imgIreland: "",
+            description: `<b>【アイリッシュ・ハープ】</b><br>
+                アイルランドの国章にもなっているハープ。国の魂として愛されています。
+                石畳の路地に響くハープの音色。国の魂として愛される楽器です。
+                <br><small>※参拝可能時間にお越しください</small>`
+        },
+        "5": {
+            name: "巨人の道<br>(大阪松竹座)",
+            lat: 34.6685, lng: 135.5015,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./spot5.png", imgIreland: "",
+            description: `<b>【ジャイアンツ・コーズウェー】</b><br>
+                火山活動でできた不思議な六角形の石柱群。巨人が作ったという伝説があります。
+                世界遺産の奇岩を思わせる石柱。巨人の伝説が息づく場所です。
+                <br><small>※建物周辺は24時間訪問可能です</small>`
+        },
+        "6": {
+            name: "ケルトの結び目<br>(中之島公会堂)",
+            lat: 34.6935, lng: 135.5035,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./spot6.png", imgIreland: "",
+            description: `<b>【永遠のシンボル】</b><br>
+                一筆書きのように途切れない模様は「永遠」を象徴しています。
+                <br><small>※外観見学は自由ですが、夜間は足元にご注意ください</small>`
+        },
+        "7": {
+            name: "黄金の輪<br>(知恩院・マグナス前)",
+            lat: 35.0048, lng: 135.7821,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./spot7.png", imgIreland: "",
+            description: `<b>【マグナス・リン】</b><br>
+                アイルランドと日本をつなぐ黄金の輪。ゲール語で「場所・地点」を意味する「リン」は、
+                日本語の「輪」にも通じます。人と自然の循環を象徴するこの作品は、
+                アイルランドから遥々この地へ。
+                <br><small>※開門時間（9:00〜16:00頃）にお越しください</small>`
+        },
+        "8": {
+            name: "スロンチャ！の鐘<br>(神戸・メリケン広場)",
+            lat: 34.6822937, lng: 135.1886448,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./spot8.png", imgIreland: "",
+            description: `<b>【パブの文化】</b><br>
+                「Sláinte（スロンチャ）」とは「あなたの健康に！」という意味の乾杯の言葉です。
+                港町の風に乗って、乾杯の声が響きます。
+                <br><small>※公園エリアのため24時間訪問可能です</small>`
+        },
+        "9": {
+            name: "守護聖人の書<br>(カトリック神戸中央教会)",
+            lat: 34.6973653, lng: 135.1904805,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./spot9.png", imgIreland: "",
+            description: `<b>【ケルズの書】</b><br>
+                世界で最も美しい本と呼ばれる、中世の豪華な写本です。
+                神聖な場所に届いた異国の芸術を想います。
+                <br><small>※開館時間（9:00〜17:00）にお越しください</small>`
+        },
+        "10": {
+            name: "聖なる泉<br>(スカイビル噴水)",
+            lat: 34.7052872, lng: 135.4896527,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./spot10.png", imgIreland: "",
+            description: `<b>【ホーリー・ウェル】</b><br>
+                アイルランド各地にある、癒やしの力があると信じられている聖なる泉。
+                都会に湧く水に、その祈りを重ねて。
+                <br><small>※24時間訪問可能です</small>`
+        },
+        "11": {
+            name: "緑の谷<br>(御堂会館)",
+            lat: 34.6805, lng: 135.4995,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./spot11.png", imgIreland: "",
+            description: `<b>【グレン】</b><br>
+                エメラルドの島と呼ばれるにふさわしい、美しい谷の風景。
+                重厚な建物の静寂は、深く穏やかな谷（グレン）のよう。
+                <br><small>※建物周辺の見学は自由です</small>`
+        },
+        "12": {
+            name: "風の砦<br>大阪ステーションcity 風の広場)",
+            lat: 34.7030158, lng: 135.4954248,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./spot12.png", imgIreland: "",
+            description: `<b>【断崖の砦】</b><br>
+                断崖絶壁に建つ石造りの砦。古代の歴史を今に伝えています。
+                吹き抜ける風とビル群。その迫力は砦のようです。
+                <br><small>※開放時間（7:00〜23:30）にお越しください</small>`
+        },
+        "13": {
+            name: "🌈 虹の麓の黄金<br>(太左衛門橋・GOAL)",
+            lat: 34.6690596, lng: 135.5032575,
+            arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
+            imgUrl: "./goal.png", imgIreland: "",
+            description: `<b>【コンプリート！】</b><br>
+                9つの知恵を集めました！虹の麓に隠された黄金を手にする資格は、
+                あなたの好奇心そのものです。おめでとう！
+                <br><small>※9スタンプ取得後に解放されます</small>`
+        }
     };
 
     let map, markers = {};
-    const storageKey = 'rally_v2026_final'; 
-    const GOAL_ID = "13"; 
-    const REQUIRED_COUNT = 9; 
+    const storageKey = 'rally_v2026_final';
+    const GOAL_ID = "13";
+    const REQUIRED_COUNT = 9;
     let tapCount = 0;
     let currentLat, currentLng;
 
@@ -335,11 +324,13 @@
             adminContainer.appendChild(row);
         }
         
-        const center = targets["1"].locations ? targets["1"].locations[0] : targets["1"];
+        const center = targets["1"].locations[0];
         map = L.map('map').setView([center.lat, center.lng], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        for (let id in targets) {
+        // マーカー配置も数字順で統一
+        for (let i = 1; i <= 13; i++) {
+            const id = String(i);
             markers[id] = [];
             const t = targets[id];
             const popupContent = `<strong>${t.name}</strong><br><button onclick="openModal('${id}')" style="margin-top:5px;font-size:10px;cursor:pointer;">解説を見る</button>`;
@@ -360,53 +351,74 @@
 
     function startGps() {
         const opt = { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 };
-        navigator.geolocation.watchPosition(pos => {
-            currentLat = pos.coords.latitude; currentLng = pos.coords.longitude;
-            document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
-        }, null, opt);
+        navigator.geolocation.watchPosition(
+            pos => {
+                currentLat = pos.coords.latitude;
+                currentLng = pos.coords.longitude;
+                document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+            },
+            err => {
+                document.getElementById('current-gps-info').innerText = `GPS取得失敗: ${err.message}`;
+            },
+            opt
+        );
     }
 
     function checkLocation() {
-        if (!currentLat) { alert("GPSを取得中..."); return; }
+        if (!currentLat) { alert("GPSを取得中です。少し待ってからもう一度お試しください。"); return; }
         let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
         const mainCount = stamps.filter(id => id != GOAL_ID).length;
         let foundId = null;
 
-        for (let id in targets) {
+        // 数字順で判定（for...inのランダム順バグを修正）
+        for (let i = 1; i <= 13; i++) {
+            const id = String(i);
             const t = targets[id];
-            const dist = t.locations ? Math.min(...t.locations.map(l => getDist(currentLat, currentLng, l.lat, l.lng))) : getDist(currentLat, currentLng, t.lat, t.lng);
-            if (dist < 0.05) { // 50m以内
-                if (id == GOAL_ID && mainCount < REQUIRED_COUNT) { alert("まだゴールは開いていません！"); return; }
+            const dist = t.locations
+                ? Math.min(...t.locations.map(l => getDist(currentLat, currentLng, l.lat, l.lng)))
+                : getDist(currentLat, currentLng, t.lat, t.lng);
+
+            if (dist < GPS_RADIUS_KM) {
+                if (id == GOAL_ID && mainCount < REQUIRED_COUNT) {
+                    alert("まだゴールは開いていません！"); return;
+                }
                 foundId = id; break;
             }
         }
 
         if (foundId) {
             if (!stamps.includes(foundId)) {
-                stamps.push(foundId); localStorage.setItem(storageKey, JSON.stringify(stamps));
-                updateDisplay(); alert("☘️ おめでとう！スタンプをゲット！");
-            } else alert("獲得済みです！");
-        } else alert("近くにスポットがありません。");
+                stamps.push(foundId);
+                localStorage.setItem(storageKey, JSON.stringify(stamps));
+                updateDisplay();
+                alert("☘️ おめでとう！スタンプをゲット！");
+            } else {
+                alert("このスポットは獲得済みです！");
+            }
+        } else {
+            alert("近くにスポットがありません。");
+        }
     }
 
     function updateDisplay() {
         let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
         const mainCount = stamps.filter(id => id != GOAL_ID).length;
         
-        for(let i=1; i<=13; i++){
-            document.getElementById("stamp-"+i)?.classList.remove("active");
-            const ar = document.getElementById("ar-link-"+i); if(ar) ar.style.display="none";
+        for (let i = 1; i <= 13; i++) {
+            document.getElementById("stamp-" + i)?.classList.remove("active");
+            const ar = document.getElementById("ar-link-" + i);
+            if (ar) ar.style.display = "none";
         }
 
         stamps.forEach(id => {
             document.getElementById("stamp-" + id)?.classList.add("active");
-            const ar = document.getElementById("ar-link-" + id); 
-            if(ar){ ar.href = targets[id].arUrl; ar.style.display = "block"; }
+            const ar = document.getElementById("ar-link-" + id);
+            if (ar) { ar.href = targets[id].arUrl; ar.style.display = "block"; }
             markers[id].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:(id==GOAL_ID?'🌈':'☘️'), iconSize:[30,30]})));
         });
 
         if (mainCount >= REQUIRED_COUNT) {
-            const goalEl = document.getElementById("stamp-"+GOAL_ID);
+            const goalEl = document.getElementById("stamp-" + GOAL_ID);
             goalEl.classList.add("ready");
             document.getElementById("goal-name").innerHTML = targets[GOAL_ID].name;
             document.getElementById("goal-btns").style.display = "block";
@@ -414,7 +426,7 @@
                 markers[GOAL_ID].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'📍', iconSize:[30,30]})));
             }
         } else {
-            document.getElementById("stamp-"+GOAL_ID).classList.remove("ready");
+            document.getElementById("stamp-" + GOAL_ID).classList.remove("ready");
             document.getElementById("goal-name").innerText = "🔒 9つのスタンプを集めて";
             document.getElementById("goal-btns").style.display = "none";
             markers[GOAL_ID].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'🔒', iconSize:[30,30]})));
@@ -425,11 +437,11 @@
     function saveLoc(id, idx = null) {
         if (!currentLat) return;
         const c = JSON.parse(localStorage.getItem('admin_coords')) || {};
-        if (idx !== null) { 
-            if(!c[id]) c[id] = {locations:[...targets[id].locations]}; 
-            c[id].locations[idx] = {lat:currentLat, lng:currentLng}; 
+        if (idx !== null) {
+            if (!c[id]) c[id] = { locations: [...targets[id].locations] };
+            c[id].locations[idx] = { lat: currentLat, lng: currentLng };
         } else {
-            c[id] = {lat:currentLat, lng:currentLng};
+            c[id] = { lat: currentLat, lng: currentLng };
         }
         localStorage.setItem('admin_coords', JSON.stringify(c));
         alert(`${targets[id].name} を現在の座標で登録しました。画面を更新して反映してください。`);
@@ -457,21 +469,16 @@
     }
 
     function adminTrigger() { if (++tapCount >= 5) { document.getElementById('admin-panel').style.display = 'block'; tapCount = 0; } }
-    function resetAdminCoords() { if(confirm("全て初期化しますか？")){ localStorage.clear(); location.reload(); } }
+    function resetAdminCoords() { if (confirm("全て初期化しますか？")) { localStorage.clear(); location.reload(); } }
 
     function openModal(id) {
         document.getElementById('modalTitle').innerHTML = targets[id].name;
         document.getElementById('modalImg').src = targets[id].imgUrl;
         document.getElementById('modalBody').innerHTML = targets[id].description;
-
-        // アイルランド写真の有無でタブ表示を切り替え
         const hasIreland = targets[id].imgIreland && targets[id].imgIreland !== "";
         document.getElementById('modal-tabs').style.display = hasIreland ? 'flex' : 'none';
         document.getElementById('modalImgIreland').src = hasIreland ? targets[id].imgIreland : '';
-
-        // 現地タブをデフォルトに戻す
         switchTab('local');
-
         document.getElementById('infoModal').style.display = 'flex';
     }
 
@@ -483,7 +490,7 @@
         document.getElementById('tab-ireland').classList.toggle('active', !isLocal);
     }
 
-    function closeModal() { document.getElementById('infoModal').style.display='none'; }
+    function closeModal() { document.getElementById('infoModal').style.display = 'none'; }
     function getDist(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
     window.onload = init;
 </script>
