@@ -30,7 +30,7 @@
 
         .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
         .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; font-size: 11px; position: relative; }
-        .stamp.goal { width: 75%; border: 3px double #ccc; background: #eee; min-height: 160px; color: #999; margin: 0 auto; grid-column: 1 / span 3; justify-content: center; gap: 6px; }
+        .stamp.goal { width: 100%; border: 3px double #ccc; background: #eee; min-height: 160px; color: #999; grid-column: 1 / span 3; justify-content: center; gap: 6px; box-sizing: border-box; }
         .stamp.goal.ready { border-color: var(--gold); background: #fffdf0; color: var(--dark-green); }
         .goal-container { margin-top: 10px; text-align: center; }
         
@@ -90,7 +90,7 @@
 
     <div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
         <p style="margin: 0; font-weight: bold;">街を巡ってARスタンプを集めよう！</p>
-        <p style="margin: 5px 0 0 0;">12個の中から9つのスタンプを集めると、<br>
+        <p style="margin: 5px 0 0 0;">12個の中から7つのスタンプを集めると、<br>
             最終ポイントのロックが解除。<br>
             虹の麓に隠されたゴールを目指せ！☘️</p>
     </div>
@@ -140,7 +140,7 @@
             locations: [
                 { lat: 34.7006,    lng: 135.4942 },   // KITTE大阪
                 { lat: 34.7010,    lng: 135.5005 },   // お初天神
-                { lat: 34.6735,    lng: 135.5015 }    // 心斎橋
+                { lat: 34.6720537, lng: 135.5035787 } // 心斎橋
             ],
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot1.png", imgIreland: "",
@@ -232,7 +232,7 @@
         },
         "10": {
             name: "聖なる泉<br>(スカイビル・中自然の森)",
-            lat: 34.7053056, lng: 135.4896944,
+            lat: 34.7047730, lng: 135.4901675,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot10.png", imgIreland: "",
             description: `<b>【ホーリー・ウェル】</b><br>
@@ -252,7 +252,7 @@
         },
         "12": {
             name: "風の砦<br>(大阪ステーションシティ・風の広場)",
-            lat: 34.7030158, lng: 135.4954248,
+            lat: 34.7037171, lng: 135.4951532,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot12.png", imgIreland: "",
             description: `<b>【断崖の砦】</b><br>
@@ -266,7 +266,7 @@
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./goal.png", imgIreland: "",
             description: `<b>【コンプリート！】</b><br>
-                9つの知恵を集めました！虹の麓に隠された黄金を手にする資格は、
+                7つの知恵を集めました！虹の麓に隠された黄金を手にする資格は、
                 あなたの好奇心そのものです。おめでとう！
                 <br><small>※9スタンプ取得後に解放されます</small>`
         }
@@ -275,7 +275,7 @@
     let map, markers = {}, userMarker = null;
     const storageKey = 'rally_v2026_final';
     const GOAL_ID = "13";
-    const REQUIRED_COUNT = 9;
+    const REQUIRED_COUNT = 7;
     let tapCount = 0;
     let currentLat, currentLng;
 
@@ -301,7 +301,7 @@
             div.id = `stamp-${id}`;
             if (id === GOAL_ID) {
                 div.className = 'stamp goal';
-                div.innerHTML = `<span id="goal-name">🔒 9つのスタンプを集めて</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-${id}" target="_blank">☘️ AR</a></div>`;
+                div.innerHTML = `<span id="goal-name">🔒 7つのスタンプを集めて</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-${id}" target="_blank">☘️ AR</a></div>`;
                 goalArea.appendChild(div);
             } else {
                 div.className = `stamp stamp-color-${id}`;
@@ -469,7 +469,7 @@
             }
         } else {
             document.getElementById("stamp-" + GOAL_ID).classList.remove("ready");
-            document.getElementById("goal-name").innerText = "🔒 9つのスタンプを集めて";
+            document.getElementById("goal-name").innerText = "🔒 7つのスタンプを集めて";
             document.getElementById("goal-btns").style.display = "none";
             markers[GOAL_ID].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'🔒', iconSize:[30,30]})));
         }
