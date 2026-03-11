@@ -505,7 +505,7 @@
             const goalEl = document.getElementById("stamp-" + GOAL_ID);
             goalEl.classList.add("ready");
             document.getElementById("goal-name").innerHTML = targets[GOAL_ID].name;
-            document.getElementById("goal-btns").style.display = "block";
+            document.getElementById("goal-btns").style.display = "flex";
 
             // ゴールマーカーをまだ追加していなければ追加
             if (markers[GOAL_ID].length === 0) {
