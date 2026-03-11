@@ -2,7 +2,7 @@
 <!-- ============================================================
      St. Patrick's Stamp Rally
      Version: 2026-03-12
-     Timestamp: 20260312-054800
+     Timestamp: 20260312-060500
      Changes: 1c心斎橋座標更新 / 10番スカイビル座標更新 / 12番風の広場座標更新
               必要スタンプ数 9→7（虹の7色） / ホーム画面追加対応（iOS/Android）
      ============================================================ -->
@@ -116,6 +116,31 @@
 
     <div class="stamp-grid" id="stamp-grid-main"></div>
     <div class="goal-container" id="goal-area"></div>
+
+    <!-- ノベルティスライドボタン（ゴール取得後に表示） -->
+    <div id="novelty-area" style="display:none; margin: 20px 0 10px;">
+        <p style="text-align:center; font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🎁 スタッフにスライドして渡してください</p>
+        <div id="novelty-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden;">
+            <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
+                → スライドしてノベルティを渡す
+            </div>
+            <div id="novelty-thumb"
+                style="position:absolute; left:4px; top:4px; width:44px; height:44px; background:var(--irish-green); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:grab; touch-action:none; z-index:10;">
+                🎁
+            </div>
+        </div>
+        <div id="novelty-done" style="display:none; background:#aaa; color:white; border-radius:50px; padding:14px; text-align:center; font-weight:bold;">
+            ✅ ノベルティ渡し済み
+        </div>
+    </div>
+
+    <!-- アンケートリンク（常時表示） -->
+    <div style="text-align:center; margin: 10px 0 20px;">
+        <a href="https://forms.gle/XXXXXXXXXX" target="_blank"
+           style="display:inline-block; padding:10px 24px; background:white; color:var(--irish-green); border:2px solid var(--irish-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+            📝 アンケートに答える
+        </a>
+    </div>
 
     <div id="admin-panel">
         <strong>🔧 管理者モード</strong><br>
@@ -496,6 +521,15 @@
                         showGoalUnlockModal();
                     }, 300);
                 }
+            }
+
+            // ゴール取得済みならノベルティスライドを表示
+            if (stamps.includes(GOAL_ID)) {
+                const noveltyArea = document.getElementById('novelty-area');
+                if (noveltyArea.style.display === 'none') {
+                    noveltyArea.style.display = 'block';
+                    initNoveltySlider();
+                }
             } else if (!stamps.includes(GOAL_ID)) {
                 markers[GOAL_ID].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'📍', iconSize:[30,30]})));
             }
@@ -603,6 +637,57 @@
         document.getElementById('infoModal').style.display = 'flex';
     }
     function getDist(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+    // ノベルティスライドボタン
+    function initNoveltySlider() {
+        const thumb = document.getElementById('novelty-thumb');
+        const wrap = document.getElementById('novelty-slide-wrap');
+        const done = document.getElementById('novelty-done');
+        if (!thumb || !wrap) return;
+
+        const storageKeyNovelty = storageKey + '_novelty';
+        if (localStorage.getItem(storageKeyNovelty) === 'done') {
+            wrap.style.display = 'none';
+            done.style.display = 'block';
+            return;
+        }
+
+        let startX = 0, isDragging = false;
+        const maxSlide = () => wrap.offsetWidth - 44 - 8;
+
+        const onStart = (e) => {
+            isDragging = true;
+            startX = (e.touches ? e.touches[0].clientX : e.clientX) - parseInt(thumb.style.left || 4);
+            thumb.style.cursor = 'grabbing';
+        };
+        const onMove = (e) => {
+            if (!isDragging) return;
+            const x = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
+            const clamped = Math.max(4, Math.min(x, maxSlide()));
+            thumb.style.left = clamped + 'px';
+        };
+        const onEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            thumb.style.cursor = 'grab';
+            if (parseInt(thumb.style.left) >= maxSlide() - 10) {
+                // 完了
+                localStorage.setItem(storageKeyNovelty, 'done');
+                wrap.style.display = 'none';
+                done.style.display = 'block';
+            } else {
+                // 戻す
+                thumb.style.left = '4px';
+            }
+        };
+
+        thumb.addEventListener('mousedown', onStart);
+        thumb.addEventListener('touchstart', onStart, {passive: true});
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, {passive: true});
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchend', onEnd);
+    }
+
     window.onload = init;
 </script>
 </body>
