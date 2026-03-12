@@ -1,9 +1,22 @@
 <!DOCTYPE html>
+<!-- ============================================================
+     St. Patrick's Stamp Rally
+     Version: 2026-03-12
+     Timestamp: 20260312-060500
+     Changes: 1c心斎橋座標更新 / 10番スカイビル座標更新 / 12番風の広場座標更新
+              必要スタンプ数 9→7（虹の7色） / ホーム画面追加対応（iOS/Android）
+     ============================================================ -->
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>St. Patrick's Stamp Rally</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Stamp Rally">
+    <meta name="theme-color" content="#009a49">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
@@ -33,6 +46,8 @@
         .stamp.goal { width: 100%; border: 3px double #ccc; background: #eee; min-height: 160px; color: #999; grid-column: 1 / span 3; justify-content: center; gap: 6px; box-sizing: border-box; }
         .stamp.goal.ready { border-color: var(--gold); background: #fffdf0; color: var(--dark-green); }
         .goal-container { margin-top: 10px; text-align: center; }
+        #goal-btns { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        #goal-btns .btn-ui { width: 60%; min-width: 120px; }
         
         .btn-ui { display: block; width: 90%; padding: 6px 0; margin: 2px 0; border-radius: 4px; font-size: 10px; font-weight: bold; text-decoration: none; text-align: center; cursor: pointer; }
         .detail-btn { background: white; color: var(--dark-green); border: 1px solid var(--gold); }
@@ -90,7 +105,7 @@
 
     <div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
         <p style="margin: 0; font-weight: bold;">街を巡ってARスタンプを集めよう！</p>
-        <p style="margin: 5px 0 0 0;">12個の中から9つのスタンプを集めると、<br>
+        <p style="margin: 5px 0 0 0;">12個の中から7つのスタンプを集めると、<br>
             最終ポイントのロックが解除。<br>
             虹の麓に隠されたゴールを目指せ！☘️</p>
     </div>
@@ -101,6 +116,31 @@
 
     <div class="stamp-grid" id="stamp-grid-main"></div>
     <div class="goal-container" id="goal-area"></div>
+
+    <!-- ノベルティスライドボタン（ゴール取得後に表示） -->
+    <div id="novelty-area" style="display:none; margin: 20px 0 10px;">
+        <p style="text-align:center; font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🎁 スタッフにスライドして渡してください</p>
+        <div id="novelty-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden;">
+            <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
+                → スライドしてノベルティを渡す
+            </div>
+            <div id="novelty-thumb"
+                style="position:absolute; left:4px; top:4px; width:44px; height:44px; background:var(--irish-green); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:grab; touch-action:none; z-index:10;">
+                🎁
+            </div>
+        </div>
+        <div id="novelty-done" style="display:none; background:#aaa; color:white; border-radius:50px; padding:14px; text-align:center; font-weight:bold;">
+            ✅ ノベルティ渡し済み
+        </div>
+    </div>
+
+    <!-- アンケートリンク（常時表示） -->
+    <div style="text-align:center; margin: 10px 0 20px;">
+        <a href="https://forms.gle/XXXXXXXXXX" target="_blank"
+           style="display:inline-block; padding:10px 24px; background:white; color:var(--irish-green); border:2px solid var(--irish-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+            📝 アンケートに答える
+        </a>
+    </div>
 
     <div id="admin-panel">
         <strong>🔧 管理者モード</strong><br>
@@ -140,14 +180,14 @@
             locations: [
                 { lat: 34.7006,    lng: 135.4942 },   // KITTE大阪
                 { lat: 34.7010,    lng: 135.5005 },   // お初天神
-                { lat: 34.6735,    lng: 135.5015 }    // 心斎橋
+                { lat: 34.6720537, lng: 135.5035787 } // 心斎橋
             ],
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot1.png", imgIreland: "",
             description: `<b>【シャムロック】</b><br>
                 三つ葉のクローバーはアイルランドの国花。聖パトリックがキリスト教を広める際、この葉を使って説明したと言われています。
                 <br><small>THE BLARNEY STONE<br>
-                （KITTE/お初天神/心斎橋）３つどこの店舗でも取得できます</small>`
+                （KITTE/お初天神/心斎橋）３つどこの店舗でも取得できます<＜br＞https://the-blarney-stone.com//small>`
         },
         "2": {
             name: "ダブリンの扉<br>(Dublin Bay)",
@@ -232,7 +272,7 @@
         },
         "10": {
             name: "聖なる泉<br>(スカイビル・中自然の森)",
-            lat: 34.7053056, lng: 135.4896944,
+            lat: 34.7047730, lng: 135.4901675,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot10.png", imgIreland: "",
             description: `<b>【ホーリー・ウェル】</b><br>
@@ -252,7 +292,7 @@
         },
         "12": {
             name: "風の砦<br>(大阪ステーションシティ・風の広場)",
-            lat: 34.7030158, lng: 135.4954248,
+            lat: 34.7037171, lng: 135.4951532,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./spot12.png", imgIreland: "",
             description: `<b>【断崖の砦】</b><br>
@@ -266,16 +306,16 @@
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./goal.png", imgIreland: "",
             description: `<b>【コンプリート！】</b><br>
-                9つの知恵を集めました！虹の麓に隠された黄金を手にする資格は、
+                7つの知恵を集めました！虹の麓に隠された黄金を手にする資格は、
                 あなたの好奇心そのものです。おめでとう！
-                <br><small>※9スタンプ取得後に解放されます</small>`
+                <br><small>xxxxARパレード</small>`
         }
     };
 
     let map, markers = {}, userMarker = null;
     const storageKey = 'rally_v2026_final';
     const GOAL_ID = "13";
-    const REQUIRED_COUNT = 9;
+    const REQUIRED_COUNT = 7;
     let tapCount = 0;
     let currentLat, currentLng;
 
@@ -301,7 +341,7 @@
             div.id = `stamp-${id}`;
             if (id === GOAL_ID) {
                 div.className = 'stamp goal';
-                div.innerHTML = `<span id="goal-name">🔒 9つのスタンプを集めて</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-${id}" target="_blank">☘️ AR</a></div>`;
+                div.innerHTML = `<span id="goal-name">🔒 7つのスタンプを集めて</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-${id}" target="_blank">☘️ AR</a></div>`;
                 goalArea.appendChild(div);
             } else {
                 div.className = `stamp stamp-color-${id}`;
@@ -350,10 +390,11 @@
         map = L.map('map').setView([center.lat, center.lng], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // マーカー配置も数字順で統一
+        // マーカー配置も数字順で統一（ゴールは最初は地図に載せない）
         for (let i = 1; i <= 13; i++) {
             const id = String(i);
             markers[id] = [];
+            if (id === GOAL_ID) continue; // ゴールは後でunlockされたときに追加
             const t = targets[id];
             const popupContent = `<strong>${t.name}</strong><br><button onclick="openModal('${id}')" style="margin-top:5px;font-size:10px;cursor:pointer;">解説を見る</button>`;
             
@@ -363,7 +404,7 @@
                     markers[id].push(m);
                 });
             } else {
-                const m = L.marker([t.lat, t.lng], {icon: L.divIcon({className:'custom-marker', html:(id==GOAL_ID?'🔒':'📍'), iconSize:[30,30]})}).addTo(map).bindPopup(popupContent);
+                const m = L.marker([t.lat, t.lng], {icon: L.divIcon({className:'custom-marker', html:'📍', iconSize:[30,30]})}).addTo(map).bindPopup(popupContent);
                 markers[id].push(m);
             }
         }
@@ -459,19 +500,46 @@
             markers[id].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:(id==GOAL_ID?'🌈':'☘️'), iconSize:[30,30]})));
         });
 
+        const wasLocked = markers[GOAL_ID].length === 0;
         if (mainCount >= REQUIRED_COUNT) {
             const goalEl = document.getElementById("stamp-" + GOAL_ID);
             goalEl.classList.add("ready");
             document.getElementById("goal-name").innerHTML = targets[GOAL_ID].name;
-            document.getElementById("goal-btns").style.display = "block";
-            if (!stamps.includes(GOAL_ID)) {
+            document.getElementById("goal-btns").style.display = "flex";
+
+            // ゴールマーカーをまだ追加していなければ追加
+            if (markers[GOAL_ID].length === 0) {
+                const t = targets[GOAL_ID];
+                const popupContent = `<strong>${t.name}</strong><br><button onclick="openModal('${GOAL_ID}')" style="margin-top:5px;font-size:10px;cursor:pointer;">解説を見る</button>`;
+                const icon = stamps.includes(GOAL_ID) ? '🌈' : '📍';
+                const m = L.marker([t.lat, t.lng], {icon: L.divIcon({className:'custom-marker', html:icon, iconSize:[30,30]})}).addTo(map).bindPopup(popupContent);
+                markers[GOAL_ID].push(m);
+
+                // 初めて解放された瞬間だけモーダルで通知
+                if (wasLocked) {
+                    setTimeout(() => {
+                        showGoalUnlockModal();
+                    }, 300);
+                }
+            }
+
+            // ゴール取得済みならノベルティスライドを表示
+            if (stamps.includes(GOAL_ID)) {
+                const noveltyArea = document.getElementById('novelty-area');
+                if (noveltyArea.style.display === 'none') {
+                    noveltyArea.style.display = 'block';
+                    initNoveltySlider();
+                }
+            } else if (!stamps.includes(GOAL_ID)) {
                 markers[GOAL_ID].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'📍', iconSize:[30,30]})));
             }
         } else {
             document.getElementById("stamp-" + GOAL_ID).classList.remove("ready");
-            document.getElementById("goal-name").innerText = "🔒 9つのスタンプを集めて";
+            document.getElementById("goal-name").innerHTML = `🔒 <span style="font-size:10px; color:#999;">難波エリアのどこか…</span>`;
             document.getElementById("goal-btns").style.display = "none";
-            markers[GOAL_ID].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'🔒', iconSize:[30,30]})));
+            // ゴールマーカーを地図から削除
+            markers[GOAL_ID].forEach(m => map.removeLayer(m));
+            markers[GOAL_ID] = [];
         }
         document.getElementById("status").innerText = `集めたスタンプ: ${mainCount} / ${REQUIRED_COUNT}`;
     }
@@ -544,8 +612,82 @@
         document.getElementById('tab-ireland').classList.toggle('active', !isLocal);
     }
 
-    function closeModal() { document.getElementById('infoModal').style.display = 'none'; }
+    function closeModal() {
+        document.getElementById('infoModal').style.display = 'none';
+        // モーダル画像を元に戻す
+        document.getElementById('modalImg').style.display = 'block';
+    }
+
+    function showGoalUnlockModal() {
+        document.getElementById('modalTitle').innerHTML = '🌈 ゴール解放！';
+        document.getElementById('modalImg').src = '';
+        document.getElementById('modalImg').style.display = 'none';
+        document.getElementById('modal-tabs').style.display = 'none';
+        document.getElementById('modalImgIreland').style.display = 'none';
+        document.getElementById('modalBody').innerHTML = `
+            <div style="text-align:center; padding: 10px 0;">
+                <div style="font-size: 48px; margin-bottom: 10px;">🌈</div>
+                <p style="font-size: 1.1rem; font-weight: bold; color: var(--dark-green);">
+                    7つのスタンプを集めました！
+                </p>
+                <p>ゴールの場所が解放されました。<br>
+                <strong>難波エリア・太左衛門橋</strong>を目指してください！</p>
+                <p style="font-size: 0.85rem; color: #777;">地図にゴールのピンが表示されています。</p>
+            </div>`;
+        document.getElementById('infoModal').style.display = 'flex';
+    }
     function getDist(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+    // ノベルティスライドボタン
+    function initNoveltySlider() {
+        const thumb = document.getElementById('novelty-thumb');
+        const wrap = document.getElementById('novelty-slide-wrap');
+        const done = document.getElementById('novelty-done');
+        if (!thumb || !wrap) return;
+
+        const storageKeyNovelty = storageKey + '_novelty';
+        if (localStorage.getItem(storageKeyNovelty) === 'done') {
+            wrap.style.display = 'none';
+            done.style.display = 'block';
+            return;
+        }
+
+        let startX = 0, isDragging = false;
+        const maxSlide = () => wrap.offsetWidth - 44 - 8;
+
+        const onStart = (e) => {
+            isDragging = true;
+            startX = (e.touches ? e.touches[0].clientX : e.clientX) - parseInt(thumb.style.left || 4);
+            thumb.style.cursor = 'grabbing';
+        };
+        const onMove = (e) => {
+            if (!isDragging) return;
+            const x = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
+            const clamped = Math.max(4, Math.min(x, maxSlide()));
+            thumb.style.left = clamped + 'px';
+        };
+        const onEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            thumb.style.cursor = 'grab';
+            if (parseInt(thumb.style.left) >= maxSlide() - 10) {
+                // 完了
+                localStorage.setItem(storageKeyNovelty, 'done');
+                wrap.style.display = 'none';
+                done.style.display = 'block';
+            } else {
+                // 戻す
+                thumb.style.left = '4px';
+            }
+        };
+
+        thumb.addEventListener('mousedown', onStart);
+        thumb.addEventListener('touchstart', onStart, {passive: true});
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, {passive: true});
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchend', onEnd);
+    }
+
     window.onload = init;
 </script>
 </body>
