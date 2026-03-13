@@ -187,8 +187,8 @@
         <span class="modal-close" onclick="closeModal()">&times;</span>
         <h2 id="modalTitle" style="margin-top:0;"></h2>
         <div class="tab-container" id="modal-tabs">
-            <button class="tab-btn active" id="tab-local"   onclick="switchTab('local')">📍 現地</button>
-            <button class="tab-btn"        id="tab-ireland" onclick="switchTab('ireland')">🍀 アイルランド</button>
+            <button class="tab-btn active" id="tab-ireland" onclick="switchTab('ireland')">🍀 アイルランド</button>
+            <button class="tab-btn"        id="tab-local"   onclick="switchTab('local')">📍 ラリースポット</button>
         </div>
         <img id="modalImg" class="modal-image" src="">
         <img id="modalImgIreland" class="modal-image" src="" style="display:none;">
@@ -285,7 +285,7 @@
                 <span style="color:#cc6600;">※営業中のみスタンプ取得できます</span></small>`
         },
         "3": {
-            name: "リバーダンス<br>(なんばグランド花月)",
+            name: "妖精のダンス<br>(なんばグランド花月)",
             lat: 34.6649869, lng: 135.5036556,
             arUrl: "https://palanar.app/v2/ar_contents/ifo2026_2",
             imgUrl: "./img/AR_info/resized_03_Osaka.png", imgIreland: "./img/AR_info/resized_03_Ireland.png",
@@ -767,7 +767,7 @@
         document.getElementById('modalImgIreland').src = targets[id].imgIreland || '';
         const hasIreland = targets[id].imgIreland && targets[id].imgIreland !== "";
         document.getElementById('modal-tabs').style.display = hasIreland ? 'flex' : 'none';
-        switchTab('local');
+        switchTab('ireland');
         document.getElementById('infoModal').style.display = 'flex';
     }
 
