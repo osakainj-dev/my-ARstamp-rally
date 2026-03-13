@@ -186,12 +186,26 @@
         </div>
     </div>
 
-    <!-- アンケートリンク（常時表示） -->
-    <div style="text-align:center; margin: 10px 0 20px;">
-        <a href="https://forms.gle/XXXXXXXXXX" target="_blank"
-           style="display:inline-block; padding:10px 24px; background:white; color:var(--irish-green); border:2px solid var(--irish-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
-            📝 アンケートに答える
-        </a>
+    <!-- アンケートリンク -->
+    <div id="enquete-area" style="text-align:center; margin: 10px 0 20px;">
+        <!-- コンプ前 -->
+        <div id="enquete-normal">
+            <a href="https://forms.gle/XXXXXXXXXX" target="_blank"
+               style="display:inline-block; padding:10px 24px; background:white; color:var(--irish-green); border:2px solid var(--irish-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+                📝 アンケートに答える
+            </a>
+        </div>
+        <!-- コンプ後 -->
+        <div id="enquete-complete" style="display:none;">
+            <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">
+                🎬 スペシャルムービーはアンケートへのご回答でプレゼント！<br>
+                <small style="color:#777;">ご登録のメールアドレスに後日リンクをお送りします</small>
+            </p>
+            <a href="https://forms.gle/XXXXXXXXXX" target="_blank"
+               style="display:inline-block; padding:10px 24px; background:var(--irish-green); color:white; border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+                📝 アンケートに答えてムービーをもらう
+            </a>
+        </div>
     </div>
 
     <div id="admin-panel">
@@ -765,6 +779,15 @@
             wallpaperBArea.style.display = 'block';
         } else {
             wallpaperBArea.style.display = 'none';
+        }
+
+        // アンケート：ゴール取得後はスペシャルムービー訴求に切り替え
+        if (stamps.includes(GOAL_ID)) {
+            document.getElementById('enquete-normal').style.display = 'none';
+            document.getElementById('enquete-complete').style.display = 'block';
+        } else {
+            document.getElementById('enquete-normal').style.display = 'block';
+            document.getElementById('enquete-complete').style.display = 'none';
         }
     }
 
