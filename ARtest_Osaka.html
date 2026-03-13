@@ -2,7 +2,7 @@
 <!-- ============================================================
      St. Patrick's Stamp Rally
      Version: 2026-03-13b
-     Timestamp: 20260313-120000
+     Timestamp: 20260314-bugfix-markers
      Changes: スポット名称更新 / 画像パスをimg/AR_info/に変更
               モーダルタブでアイルランド説明文も切り替え対応（descriptionIreland）
               ノベルティスライドをポストカード・ステッカーの2つに分割
@@ -511,6 +511,7 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         // マーカー配置も数字順で統一（ゴールは最初は地図に載せない）
+        const stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
         for (let i = 1; i <= 13; i++) {
             const id = String(i);
             markers[id] = [];
