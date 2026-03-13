@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <!-- ============================================================
      St. Patrick's Stamp Rally
-     Version: 2026-03-13b
-     Timestamp: 20260314-bugfix-markers
+     Version: 2026-03-14
+     Timestamp: 20260314-updates
      Changes: スポット名称更新 / 画像パスをimg/AR_info/に変更
               モーダルタブでアイルランド説明文も切り替え対応（descriptionIreland）
               ノベルティスライドをポストカード・ステッカーの2つに分割
               協賛店舗（スポット1・2）に営業時間連動ピン色変更・時間外タップ不可機能追加
+              地図ピンのバグ修正（stamps未定義）
+              地図下に凡例追加
+              スポット03表題を「妖精のダンス」に変更
+              各スポットに日本語説明文追加（03〜13番）
+              モーダルタブ順序変更（アイルランド左・デフォルト表示）
+              タブ「現地」→「ラリースポット」に変更
+              壁紙A（3スタンプ）・壁紙B（ゴール）ダウンロードエリア追加
      ============================================================ -->
 <html lang="ja">
 <head>
@@ -125,6 +132,24 @@
 
     <div class="stamp-grid" id="stamp-grid-main"></div>
     <div class="goal-container" id="goal-area"></div>
+
+    <!-- 壁紙A（3スタンプ達成で表示） -->
+    <div id="wallpaper-a-area" style="display:none; margin: 16px 0 8px; text-align:center;">
+        <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🎁 3スタンプ達成！デジタル壁紙をプレゼント</p>
+        <a id="wallpaper-a-link" href="#" target="_blank"
+           style="display:inline-block; padding:10px 24px; background:var(--irish-green); color:white; border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+            📥 壁紙をダウンロード（Type-A）
+        </a>
+    </div>
+
+    <!-- 壁紙B（ゴール達成で表示） -->
+    <div id="wallpaper-b-area" style="display:none; margin: 16px 0 8px; text-align:center;">
+        <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🌈 ゴール達成！スペシャル壁紙をプレゼント</p>
+        <a id="wallpaper-b-link" href="#" target="_blank"
+           style="display:inline-block; padding:10px 24px; background:var(--gold); color:var(--dark-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+            📥 壁紙をダウンロード（Type-B）
+        </a>
+    </div>
 
     <!-- ノベルティスライドボタン（ゴール取得後に表示） -->
     <div id="novelty-area" style="display:none; margin: 20px 0 10px;">
@@ -707,6 +732,26 @@
             markers[GOAL_ID] = [];
         }
         document.getElementById("status").innerText = `集めたスタンプ: ${mainCount} / ${REQUIRED_COUNT}`;
+
+        // 壁紙A：3スタンプ達成で表示
+        const wallpaperAUrl = ""; // TODO: 壁紙A URLを入れる
+        const wallpaperAArea = document.getElementById('wallpaper-a-area');
+        if (mainCount >= 3 && wallpaperAUrl) {
+            document.getElementById('wallpaper-a-link').href = wallpaperAUrl;
+            wallpaperAArea.style.display = 'block';
+        } else {
+            wallpaperAArea.style.display = 'none';
+        }
+
+        // 壁紙B：ゴール取得で表示
+        const wallpaperBUrl = ""; // TODO: 壁紙B URLを入れる
+        const wallpaperBArea = document.getElementById('wallpaper-b-area');
+        if (stamps.includes(GOAL_ID) && wallpaperBUrl) {
+            document.getElementById('wallpaper-b-link').href = wallpaperBUrl;
+            wallpaperBArea.style.display = 'block';
+        } else {
+            wallpaperBArea.style.display = 'none';
+        }
     }
 
     function saveLoc(id, idx = null) {
