@@ -725,8 +725,10 @@
                 }
             }
 
-            // ゴール取得済みならノベルティスライドを表示
+            // ゴール取得済みならARリンクを表示＋ノベルティスライドを表示
             if (stamps.includes(GOAL_ID)) {
+                const arLink = document.getElementById('ar-link-' + GOAL_ID);
+                if (arLink) { arLink.href = targets[GOAL_ID].arUrl; arLink.style.display = 'block'; }
                 const noveltyArea = document.getElementById('novelty-area');
                 if (noveltyArea.style.display === 'none') {
                     noveltyArea.style.display = 'block';
@@ -869,10 +871,6 @@
                 <p>ゴールの場所が解放されました。<br>
                 <strong>難波エリア・太左衛門橋</strong>を目指してください！</p>
                 <p style="font-size: 0.85rem; color: #777;">地図にゴールのピンが表示されています。</p>
-                <a href="${targets[GOAL_ID].arUrl}" target="_blank"
-                   style="display:inline-block; margin-top:12px; padding:10px 24px; background:var(--irish-green); color:white; border-radius:20px; font-weight:bold; font-size:0.9rem; text-decoration:none;">
-                    ☘️ ゴールのARを見る
-                </a>
             </div>`;
         document.getElementById('infoModal').style.display = 'flex';
     }
