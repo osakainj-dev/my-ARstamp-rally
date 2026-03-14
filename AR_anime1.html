@@ -289,7 +289,7 @@
 <body>
 
 <!-- BGM -->
-<audio id="bgm" src="./img/music/eigin Leitir Moir.wav_TI7LIC.mp3" loop preload="auto" type="audio/mpeg" playsinline></audio>
+<audio id="bgm" src="./img/music/eigin%20Leitir%20Moir.wav_TI7LIC.mp3" loop preload="auto" type="audio/mpeg" playsinline></audio>
 
 <!-- ① カメラ映像 (最背面) -->
 <video id="camera-bg" autoplay playsinline muted></video>
@@ -807,41 +807,49 @@ async function takeScreenshot() {
         osc.start(); osc.stop(ctx.currentTime + 0.12);
     } catch(e) {}
 
-    try {
-        const video   = document.getElementById('camera-bg');
-        const aCanvas = document.querySelector('a-scene canvas');
+    // WebGLバッファが有効な間に次フレームでキャプチャ
+    requestAnimationFrame(() => {
+        try {
+            const video   = document.getElementById('camera-bg');
+            const aScene  = document.querySelector('a-scene');
+            // A-Frame の renderer から直接 canvas を取得
+            const aCanvas = aScene && aScene.renderer
+                ? aScene.renderer.domElement
+                : document.querySelector('a-scene canvas');
 
-        // 合成用 canvas
-        const out = document.createElement('canvas');
-        out.width  = video.videoWidth  || window.innerWidth;
-        out.height = video.videoHeight || window.innerHeight;
-        const ctx2 = out.getContext('2d');
+            const W = video.videoWidth  || window.innerWidth;
+            const H = video.videoHeight || window.innerHeight;
 
-        // 1. カメラ映像
-        ctx2.drawImage(video, 0, 0, out.width, out.height);
+            const out  = document.createElement('canvas');
+            out.width  = W;
+            out.height = H;
+            const ctx2 = out.getContext('2d');
 
-        // 2. A-Frame WebGL canvas を上に合成
-        if (aCanvas) {
-            ctx2.drawImage(aCanvas, 0, 0, out.width, out.height);
+            // 1. カメラ映像
+            ctx2.drawImage(video, 0, 0, W, H);
+
+            // 2. A-Frame WebGL を合成
+            //    preserveDrawingBuffer:true かつ同一オリジンなので読める
+            if (aCanvas && aCanvas.width > 0) {
+                ctx2.drawImage(aCanvas, 0, 0, W, H);
+            }
+
+            // 3. モーダル表示
+            out.toBlob(blob => {
+                if (!blob) { showToast('⚠️ 撮影できませんでした'); return; }
+                const url     = URL.createObjectURL(blob);
+                const preview = document.getElementById('photo-preview');
+                if (preview._prevUrl) URL.revokeObjectURL(preview._prevUrl);
+                preview._prevUrl = url;
+                preview.src      = url;
+                document.getElementById('photo-modal').classList.add('active');
+            }, 'image/png');
+
+        } catch(err) {
+            console.warn('[Screenshot]', err);
+            showToast('⚠️ 撮影できませんでした');
         }
-
-        // 3. モーダルに画像を表示
-        out.toBlob(blob => {
-            const url     = URL.createObjectURL(blob);
-            const preview = document.getElementById('photo-preview');
-            // 前のURLを解放
-            if (preview._prevUrl) URL.revokeObjectURL(preview._prevUrl);
-            preview._prevUrl = url;
-            preview.src = url;
-            // モーダル表示
-            const modal = document.getElementById('photo-modal');
-            modal.classList.add('active');
-        }, 'image/png');
-
-    } catch(err) {
-        console.warn('[Screenshot]', err);
-        showToast('⚠️ 撮影できませんでした');
-    }
+    });
 }
 
 function showToast(msg) {
