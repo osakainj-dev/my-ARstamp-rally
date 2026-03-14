@@ -170,26 +170,27 @@
     </a-assets>
 
     <!--
-      配置の考え方:
-      - カメラは原点(0,0,0)・上方向-10度
-      - オブジェクトは z=-18〜-25 の「目の前の空」
-      - シャークは左→右、バルーンは右→左で交差するパレード
-      - それぞれ逆方向に動くことで「行進」感が出る
+      ★ 道頓堀・川越しフライオーバー方式
+      ─────────────────────────────────────
+      カメラ: 原点(0,0,0) / 上向き-25度（橋の上から川の向こうを見るアングル）
+      モデルの軌跡:
+        Z: -55 (川の向こう・遠く) → Z: +18 (自分の後ろへ去る)
+        Y:   3 (遠くでは低め)    →  Y: 7 (頭上で最高点) → Y: 4 (去るとき)
+        ※ A-Frameアニメーションは2点間の直線なので、
+          高さの放物線は JS で tick ごとに sin カーブを加算する
+
+      シャーク: 少し左寄り(X:-2)・先行
+      バルーン: 少し右寄り(X:+2)・やや遅れて追従
+
+      トレイル: Z+ 方向が「後方」なので position="0 0 +N", rotation そのまま(Y:0)
     -->
 
-    <!-- シャーク: 左から右へ -->
+    <!-- シャーク: 奥から手前・頭上を通過して後方へ -->
     <a-entity
         id="shark"
         gltf-model="#shark-model"
         scale="3 3 3"
-        animation-mixer="clip: *; timeScale: 0.8"
-        animation__move="property: position;
-                         from: -16 2 -22;
-                         to:    16 2 -22;
-                         dur: 16000; easing: linear; loop: true; autoplay: true"
-        animation__bob="property: object3D.position.y;
-                        from: 1; to: 3;
-                        dur: 3800; dir: alternate; loop: true; easing: easeInOutSine">
+        animation-mixer="clip: *; timeScale: 0.8">
         <a-entity mixin="sparkle-large" position=" 1.2  0.5  0.2" animation__blink="delay: 0"></a-entity>
         <a-entity mixin="sparkle-large" position="-1.2 -0.5  0.8" animation__blink="delay: 250"></a-entity>
         <a-entity mixin="sparkle-large" position=" 0.5  1.2 -0.8" animation__blink="delay: 500"></a-entity>
@@ -197,55 +198,45 @@
         <a-entity mixin="sparkle-gold"  position="-0.8 -0.8 -0.5" animation__blink="delay: 370"></a-entity>
     </a-entity>
 
-    <!-- バルーン: 右から左へ (シャークと逆方向) -->
+    <!-- バルーン: シャークより少し遅れて追従 -->
     <!--
-      balloon scale=0.012
-      sparkle補正: 1/0.012 ≈ 83
-      トレイル後方: バルーンはX-方向に進む → 後方はX+ → position X=+120
-      rotation Y+90 でトレイルをX軸方向に向ける
+      balloon scale=0.012 → sparkle補正: 1/0.012 ≈ 83
+      トレイル後方: Z+方向 → position="0 0 +120", rotation Y:0
     -->
     <a-entity
         id="balloon"
         gltf-model="#balloon-model"
         scale="0.012 0.012 0.012"
-        animation-mixer="clip: *"
-        animation__move="property: position;
-                         from:  16 -1 -16;
-                         to:   -16 -1 -16;
-                         dur: 20000; easing: linear; loop: true; autoplay: true"
-        animation__bob="property: object3D.position.y;
-                        from: -1.2; to: 0.8;
-                        dur: 3200; dir: alternate; loop: true; easing: easeInOutSine">
+        animation-mixer="clip: *">
 
         <a-entity mixin="sparkle-large" scale="83 83 83" position="  0  2  0" animation__blink="delay: 0"></a-entity>
         <a-entity mixin="sparkle-gold"  scale="83 83 83" position=" 1.5 -1  1.5" animation__blink="delay: 200"></a-entity>
         <a-entity mixin="sparkle-large" scale="83 83 83" position="-1.5 -2 -1.5" animation__blink="delay: 400"></a-entity>
         <a-entity mixin="sparkle-gold"  scale="83 83 83" position="  1 -3.5  0" animation__blink="delay: 600"></a-entity>
 
-        <!-- 緑トレイル: バルーン後方(X+側) -->
+        <!-- トレイル: Z+ が後方 (進行方向Z-の逆) -->
         <a-entity
             id="trail-green"
             gltf-model="#trail-model"
             scale="83 83 83"
-            position="120 0 0"
-            rotation="0 90 0"
+            position="0 0 120"
+            rotation="0 180 0"
             animation-mixer="clip: Scene; loop: repeat; timeScale: 1.2">
         </a-entity>
-        <!-- 金トレイル: 少し斜めにずらして重ねる -->
         <a-entity
             id="trail-gold"
             gltf-model="#trail-model"
             scale="70 70 70"
-            position="100 25 10"
-            rotation="0 90 -10"
+            position="15 20 100"
+            rotation="0 180 -10"
             animation-mixer="clip: Scene; loop: repeat; timeScale: 0.9">
         </a-entity>
     </a-entity>
 
-    <!-- カメラ: 固定・ジャイロなし・上方向に少し傾けて「空を見る」 -->
+    <!-- カメラ: 上向き25度で「川の向こう〜空〜頭上」を見渡す -->
     <a-camera
         position="0 0 0"
-        rotation="-10 0 0"
+        rotation="-25 0 0"
         fov="80"
         look-controls="enabled: false"
         wasd-controls="enabled: false">
@@ -320,6 +311,66 @@
         clearInterval(iv);
         bar.style.width = '100%';
         setTimeout(() => bar.style.opacity = '0', 800);
+    });
+})();
+
+/* ===== フライオーバー: 放物線アーク制御 =====
+   Z軸方向に一定速で飛ばしつつ Y(高さ)をsin曲線でアーチ状に変化させる
+   遠く(Z:-55)で低め → 頭上(Z:0付近)で最高 → 後方(Z:+20)で再び低く
+   sharkX: -2 (左寄り)   balloonX: +2.5 (右寄り・遅れて追従)
+*/
+(function() {
+    const DURATION  = 20000;  // 1周 ms
+    const FROM_Z    = -55;
+    const TO_Z      =  20;
+    const Z_RANGE   = TO_Z - FROM_Z;
+    const SHARK_X   = -2;
+    const BALLOON_X =  2.5;
+
+    function arcY(t, base) {
+        // sin曲線で頭上付近(t≈0.6)が最高点
+        return base + Math.sin(Math.PI * Math.pow(t, 0.65)) * 7;
+    }
+    function bob(ms, period, amp) {
+        return Math.sin(ms / period * Math.PI * 2) * amp;
+    }
+
+    let start = null;
+
+    function tick(time) {
+        if (!start) start = time;
+        const elapsed = (time - start) % DURATION;
+        const t  = elapsed / DURATION;
+
+        const shark   = document.getElementById('shark');
+        const balloon = document.getElementById('balloon');
+
+        if (shark && shark.object3D) {
+            const z = FROM_Z + Z_RANGE * t;
+            shark.object3D.position.set(
+                SHARK_X,
+                arcY(t, 1.5) + bob(elapsed, 3800, 0.4),
+                z
+            );
+            shark.object3D.rotation.y = Math.PI; // モデルを進行方向に向ける
+        }
+
+        if (balloon && balloon.object3D) {
+            // バルーンは15%遅れて出発
+            const tb = (t + 0.85) % 1;
+            const zb = FROM_Z + Z_RANGE * tb;
+            balloon.object3D.position.set(
+                BALLOON_X,
+                arcY(tb, 0.5) + bob(elapsed, 3200, 0.3),
+                zb
+            );
+        }
+
+        requestAnimationFrame(tick);
+    }
+
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+        requestAnimationFrame(tick);
     });
 })();
 
