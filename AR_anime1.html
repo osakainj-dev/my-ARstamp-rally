@@ -751,11 +751,15 @@ async function startExperience() {
         document.getElementById('flash-container').style.display = 'block';
     }, 600);
 
-    // BGM再生: Android は load() を明示してから play()
+    // BGM再生 (load()はiOSでplay()をブロックするため削除)
     const bgm = document.getElementById('bgm');
-    bgm.load();
     bgm.volume = 0.7;
-    bgm.play().catch(e => console.warn('BGM:', e));
+    try {
+        await bgm.play();
+        console.log('[BGM] 再生開始');
+    } catch(e) {
+        console.warn('[BGM] 再生失敗:', e.name, e.message);
+    }
 
     const ok = await startCamera();
     if (!ok) {
