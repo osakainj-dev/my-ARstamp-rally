@@ -368,7 +368,7 @@
             id="trail-green"
             gltf-model="#trail-model"
             scale="83 83 83"
-            position="0 0 120"
+            position="0 0 200"
             rotation="0 180 0"
             animation-mixer="clip: Scene; loop: repeat; timeScale: 1.2">
         </a-entity>
@@ -376,7 +376,7 @@
             id="trail-gold"
             gltf-model="#trail-model"
             scale="70 70 70"
-            position="15 20 100"
+            position="15 20 170"
             rotation="0 180 -10"
             animation-mixer="clip: Scene; loop: repeat; timeScale: 0.9">
         </a-entity>
@@ -673,14 +673,14 @@
                 const p = shark.object3D.position;
                 // シャーク後方: Z+ に 2.5m オフセット（飛行機雲の出口）
                 for (let i = 0; i < PARTICLES_PER_FRAME; i++) {
-                    createParticle(p.x + (Math.random()-0.5)*0.8, p.y - 0.3, p.z + 1.8);
+                    createParticle(p.x + (Math.random()-0.5)*1.0, p.y - 0.2, p.z + 5.0);
                 }
             }
             if (balloon && balloon.object3D) {
                 const p = balloon.object3D.position;
                 // バルーン後方: Z+ に 2m オフセット
                 for (let i = 0; i < PARTICLES_PER_FRAME; i++) {
-                    createParticle(p.x + (Math.random()-0.5)*0.6, p.y - 0.2, p.z - 2.0);
+                    createParticle(p.x + (Math.random()-0.5)*0.8, p.y - 0.1, p.z - 5.0);
                 }
             }
 
@@ -797,19 +797,11 @@ async function startExperience() {
         document.getElementById('flash-container').style.display = 'block';
     }, 600);
 
-    // BGM再生
+    // BGM再生 (ユーザー操作中に直接呼ぶ)
     const bgm = document.getElementById('bgm');
     bgm.volume = 0.7;
-    bgm.play().then(() => {
-        console.log('[BGM] 再生開始');
-    }).catch(e => {
-        // canplaythroughを待ってリトライ
-        console.warn('[BGM] 初回失敗、ロード待ち:', e.name);
-        bgm.addEventListener('canplaythrough', () => {
-            bgm.play().catch(e2 => console.warn('[BGM] リトライ失敗:', e2.name, e2.message));
-        }, { once: true });
-        bgm.load();
-    });
+    bgm.currentTime = 0;
+    bgm.play().catch(e => console.warn('[BGM]', e.name, e.message));
 
     const ok = await startCamera();
     if (!ok) {
