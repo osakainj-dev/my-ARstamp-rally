@@ -185,7 +185,7 @@ async function takeScreenshot() {
 
     } catch(err) {
         console.warn('[Screenshot]', err);
-        showToast('⚠️ 保存できませんでした');
+        showToast('⚠️ 撮影できませんでした');
     }
 }
 
@@ -197,6 +197,11 @@ function showToast(msg) {
     void t.offsetWidth;
     t.style.animation = 'toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards';
     setTimeout(() => { t.style.display = 'none'; }, 2800);
+}
+
+
+function closePhotoModal() {
+    document.getElementById('photo-modal').classList.remove('active');
 }
 
 /* フィナーレ */
@@ -306,6 +311,57 @@ function showToast(msg) {
             from { opacity: 0; transform: translateX(-50%) translateY(10px); }
             to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
+
+        /* ===== 写真プレビューモーダル ===== */
+        #photo-modal {
+            display: none;
+            position: fixed; inset: 0;
+            z-index: 9500;
+            background: rgba(0,0,0,0.88);
+            backdrop-filter: blur(8px);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            animation: fadeInModal 0.25s ease forwards;
+        }
+        #photo-modal.active { display: flex; }
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        #photo-modal img {
+            max-width: 100%;
+            max-height: 65vh;
+            border-radius: 12px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+            display: block;
+        }
+        .photo-modal-hint {
+            margin-top: 1.2rem;
+            color: rgba(245,240,232,0.85);
+            font-size: 0.9rem;
+            text-align: center;
+            line-height: 1.6;
+        }
+        .photo-modal-hint strong {
+            color: var(--gold);
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+        .photo-modal-close {
+            margin-top: 1.4rem;
+            padding: 0.7rem 2rem;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 100px;
+            color: #fff;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
         /* ローディングバー */
         #loading-bar {
             position: fixed; bottom: 0; left: 0;
@@ -412,6 +468,17 @@ function showToast(msg) {
 
 <!-- 保存トースト -->
 <div id="save-toast"></div>
+
+
+<!-- 写真プレビューモーダル -->
+<div id="photo-modal">
+    <img id="photo-preview" src="" alt="撮影した写真">
+    <p class="photo-modal-hint">
+        <strong>📱 写真を長押しして保存してください</strong>
+        「写真に追加」または「画像を保存」を選択
+    </p>
+    <button class="photo-modal-close" onclick="closePhotoModal()">✕ 閉じる</button>
+</div>
 
 <!-- ローディングバー -->
 <div id="loading-bar"></div>
@@ -863,7 +930,7 @@ async function takeScreenshot() {
 
     } catch(err) {
         console.warn('[Screenshot]', err);
-        showToast('⚠️ 保存できませんでした');
+        showToast('⚠️ 撮影できませんでした');
     }
 }
 
@@ -875,6 +942,11 @@ function showToast(msg) {
     void t.offsetWidth;
     t.style.animation = 'toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards';
     setTimeout(() => { t.style.display = 'none'; }, 2800);
+}
+
+
+function closePhotoModal() {
+    document.getElementById('photo-modal').classList.remove('active');
 }
 
 /* フィナーレ */
