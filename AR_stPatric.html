@@ -821,8 +821,10 @@
                 const m = L.marker([t.lat, t.lng], {icon: L.divIcon({className:'custom-marker', html:icon, iconSize:[30,30]})}).addTo(map).bindPopup(popupContent);
                 markers[GOAL_ID].push(m);
 
-                // 初めて解放された瞬間だけモーダルで通知
-                if (wasLocked) {
+                // 初めて解放された瞬間だけモーダルで通知（localStorageで既表示を管理）
+                const unlockShownKey = storageKey + '_unlock_shown';
+                if (wasLocked && !localStorage.getItem(unlockShownKey)) {
+                    localStorage.setItem(unlockShownKey, '1');
                     setTimeout(() => {
                         showGoalUnlockModal();
                     }, 300);
