@@ -800,6 +800,9 @@
             goalEl.classList.add("ready");
             document.getElementById("goal-name").innerHTML = targets[GOAL_ID].name;
             document.getElementById("goal-btns").style.display = "flex";
+            // ゴールARリンクをセット（取得前でも解説ボタンと並べて表示）
+            const goalArLink = document.getElementById('ar-link-' + GOAL_ID);
+            if (goalArLink) { goalArLink.href = targets[GOAL_ID].arUrl; goalArLink.style.display = 'inline-block'; }
 
             // ゴールマーカーをまだ追加していなければ追加
             if (markers[GOAL_ID].length === 0) {
@@ -820,7 +823,7 @@
             // ゴール取得済みならARリンクを表示＋ノベルティスライドを表示
             if (stamps.includes(GOAL_ID)) {
                 const arLink = document.getElementById('ar-link-' + GOAL_ID);
-                if (arLink) { arLink.href = targets[GOAL_ID].arUrl; arLink.style.display = 'block'; }
+                if (arLink) { arLink.href = targets[GOAL_ID].arUrl; arLink.style.display = 'inline-block'; }
                 const noveltyArea = document.getElementById('novelty-area');
                 if (noveltyArea.style.display === 'none') {
                     noveltyArea.style.display = 'block';
