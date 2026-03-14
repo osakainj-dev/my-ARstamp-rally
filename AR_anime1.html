@@ -490,14 +490,14 @@
                 const p = shark.object3D.position;
                 // シャーク後方: Z+ に 2.5m オフセット（飛行機雲の出口）
                 for (let i = 0; i < PARTICLES_PER_FRAME; i++) {
-                    createParticle(p.x + (Math.random()-0.5)*0.8, p.y - 0.5, p.z + 2.5);
+                    createParticle(p.x + (Math.random()-0.5)*0.8, p.y - 0.3, p.z + 1.8);
                 }
             }
             if (balloon && balloon.object3D) {
                 const p = balloon.object3D.position;
                 // バルーン後方: Z+ に 2m オフセット
                 for (let i = 0; i < PARTICLES_PER_FRAME; i++) {
-                    createParticle(p.x + (Math.random()-0.5)*0.6, p.y - 0.3, p.z + 2.0);
+                    createParticle(p.x + (Math.random()-0.5)*0.6, p.y - 0.2, p.z - 2.0);
                 }
             }
 
