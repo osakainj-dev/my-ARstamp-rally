@@ -325,7 +325,8 @@
 
     <a-assets timeout="30000">
         <a-asset-item id="shark-model"   src="./whale_shark_fantasy.glb"></a-asset-item>
-        <a-asset-item id="balloon-model" src="./peachy_balloon_gift-v1.glb"></a-asset-item>
+        <a-asset-item id="balloon-model"  src="./peachy_balloon_gift-v1.glb"></a-asset-item>
+        <a-asset-item id="sparkle-model" src="./peachy_balloon_gift-v1.glb"></a-asset-item>
         <a-asset-item id="trail-model"   src="./img/glb/looping_particle_trail_fbx_0.9mb.glb"></a-asset-item>
         </a-assets>
 
@@ -355,7 +356,7 @@
 
     <!-- バルーン: シャークより少し遅れて追従 -->
     <!--
-      balloon scale=0.012 → sparkle補正: 1/0.012 ≈ 83
+      balloon scale=0.022 → sparkle補正: 1/0.022 ≈ 45
       トレイル後方: Z+方向 → position="0 0 +120", rotation Y:0
     -->
     <a-entity
@@ -367,7 +368,7 @@
         <a-entity
             id="trail-green"
             gltf-model="#trail-model"
-            scale="83 83 83"
+            scale="45 45 45"
             position="0 0 200"
             rotation="0 180 0"
             animation-mixer="clip: Scene; loop: repeat; timeScale: 1.2">
@@ -375,11 +376,19 @@
         <a-entity
             id="trail-gold"
             gltf-model="#trail-model"
-            scale="70 70 70"
+            scale="38 38 38"
             position="15 20 170"
             rotation="0 180 -10"
             animation-mixer="clip: Scene; loop: repeat; timeScale: 0.9">
         </a-entity>
+    </a-entity>
+
+    <!-- スパークル: バルーンと同じGLBを独立エンティティとして追尾 -->
+    <a-entity
+        id="sparkle-follower"
+        gltf-model="#sparkle-model"
+        scale="0.03 0.03 0.03"
+        animation-mixer="clip: *">
     </a-entity>
 
     <!-- カメラ: 上向き25度で「川の向こう〜空〜頭上」を見渡す -->
@@ -587,6 +596,18 @@
                 BALLOON_X,
                 arcY(tb, 2) + bob(elapsed, 3200, 0.3),
                 zb
+            );
+        }
+
+        // スパークル: バルーンよりさらに5%遅れて後方を追尾
+        const sparkle = document.getElementById('sparkle-follower');
+        if (sparkle && sparkle.object3D) {
+            const ts = (t + 0.80) % 1;
+            const zs = FROM_Z + Z_RANGE * ts;
+            sparkle.object3D.position.set(
+                BALLOON_X + 0.3,
+                arcY(ts, 2) + bob(elapsed, 3200, 0.3),
+                zs + 3.5  // バルーンより少し後ろ
             );
         }
 
