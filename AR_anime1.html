@@ -277,6 +277,25 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
+
+        /* ===== 終了ボタン ===== */
+        #exit-btn {
+            display: none;
+            position: fixed;
+            top: 16px; right: 16px;
+            z-index: 8000;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 100px;
+            padding: 0.45em 1.1em;
+            color: rgba(255,255,255,0.85);
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body.ar-active #exit-btn { display: block; }
         /* ローディングバー */
         #loading-bar {
             position: fixed; bottom: 0; left: 0;
@@ -289,7 +308,9 @@
 <body>
 
 <!-- BGM -->
-<audio id="bgm" src="./img/music/eigin_leitir_moir.mp3" loop preload="auto" type="audio/mpeg" playsinline></audio>
+<audio id="bgm" loop>
+    <source src="./img/music/eigin_leitir_moir.m4a" type="audio/mp4">
+</audio>
 
 <!-- ① カメラ映像 (最背面) -->
 <video id="camera-bg" autoplay playsinline muted></video>
@@ -387,13 +408,21 @@
 
 <!-- 写真プレビューモーダル -->
 <div id="photo-modal">
-    <img id="photo-preview" src="" alt="撮影した写真">
+    <!-- imgをaタグで包む: iOS長押し→「写真に追加」が出る -->
+    <a id="photo-link" href="" download="IFO2026_parade.jpg" target="_blank" style="display:block;">
+        <img id="photo-preview" src="" alt="撮影した写真"
+             style="max-width:100%; max-height:65vh; border-radius:12px; display:block;">
+    </a>
     <p class="photo-modal-hint">
         <strong>📱 写真を長押しして保存してください</strong>
-        「写真に追加」または「画像を保存」を選択
+        iOS: 「写真に追加」／Android: 「画像を保存」
     </p>
     <button class="photo-modal-close" onclick="closePhotoModal()">✕ 閉じる</button>
 </div>
+
+
+<!-- 終了ボタン -->
+<button id="exit-btn" onclick="exitAR()">✕ 終了</button>
 
 <!-- ローディングバー -->
 <div id="loading-bar"></div>
@@ -663,17 +692,22 @@
 })();
 
 /* モデル読み込み後の調整 */
-window.addEventListener('load', function() {
-    const scene = document.querySelector('a-scene');
+(function() {
     const HIDDEN = new Set(['particles_0','particles_1','particles_2','ocean_0']);
     const TINTS = {
         'trail-green': { r: 0,    g: 0.8,  b: 0.33, opacity: 0.85, emissive: 1.4 },
         'trail-gold':  { r: 0.95, g: 0.71, b: 0,    opacity: 0.72, emissive: 1.1 },
     };
-    scene.addEventListener('model-loaded', (e) => {
+
+    function onModelLoaded(e) {
         const id = e.target.id;
         e.detail.model.traverse(node => {
-            if (HIDDEN.has(node.name.toLowerCase())) node.visible = false;
+            // 影・海・パーティクル非表示
+            if (HIDDEN.has(node.name.toLowerCase())) {
+                node.visible = false;
+                return;
+            }
+            // トレイルカラー
             if (TINTS[id] && node.isMesh && node.material) {
                 const t = TINTS[id];
                 const col = new THREE.Color(t.r, t.g, t.b);
@@ -688,8 +722,20 @@ window.addEventListener('load', function() {
             }
         });
         console.log('[Parade] loaded:', id);
-    });
-});
+    }
+
+    // scene が ready になる前後どちらでも確実に捕捉する
+    const scene = document.querySelector('a-scene');
+    if (scene.hasLoaded) {
+        scene.addEventListener('model-loaded', onModelLoaded);
+    } else {
+        scene.addEventListener('loaded', () => {
+            scene.addEventListener('model-loaded', onModelLoaded);
+        });
+    }
+    // loaded前に発火するmodel-loadedも拾う（アセット読み込みが早い場合）
+    scene.addEventListener('model-loaded', onModelLoaded);
+})();
 
 /* カメラ起動 (iOS / Android 両対応) */
 async function startCamera() {
@@ -751,15 +797,19 @@ async function startExperience() {
         document.getElementById('flash-container').style.display = 'block';
     }, 600);
 
-    // BGM再生 (load()はiOSでplay()をブロックするため削除)
+    // BGM再生
     const bgm = document.getElementById('bgm');
     bgm.volume = 0.7;
-    try {
-        await bgm.play();
+    bgm.play().then(() => {
         console.log('[BGM] 再生開始');
-    } catch(e) {
-        console.warn('[BGM] 再生失敗:', e.name, e.message);
-    }
+    }).catch(e => {
+        // canplaythroughを待ってリトライ
+        console.warn('[BGM] 初回失敗、ロード待ち:', e.name);
+        bgm.addEventListener('canplaythrough', () => {
+            bgm.play().catch(e2 => console.warn('[BGM] リトライ失敗:', e2.name, e2.message));
+        }, { once: true });
+        bgm.load();
+    });
 
     const ok = await startCamera();
     if (!ok) {
@@ -833,9 +883,17 @@ async function takeScreenshot() {
             ctx2.drawImage(video, 0, 0, W, H);
 
             // 2. A-Frame WebGL を合成
-            //    preserveDrawingBuffer:true かつ同一オリジンなので読める
             if (aCanvas && aCanvas.width > 0) {
                 ctx2.drawImage(aCanvas, 0, 0, W, H);
+            }
+
+            // 3. ロゴを左上に合成
+            const logoEl = document.getElementById('ar-logo');
+            if (logoEl && logoEl.complete && logoEl.naturalWidth > 0) {
+                const logoW = W * 0.22; // 画面幅の22%
+                const logoH = logoW * (logoEl.naturalHeight / logoEl.naturalWidth);
+                const pad   = W * 0.03;
+                ctx2.drawImage(logoEl, pad, pad, logoW, logoH);
             }
 
             // 3. モーダル表示
@@ -843,9 +901,11 @@ async function takeScreenshot() {
                 if (!blob) { showToast('⚠️ 撮影できませんでした'); return; }
                 const url     = URL.createObjectURL(blob);
                 const preview = document.getElementById('photo-preview');
+                const link    = document.getElementById('photo-link');
                 if (preview._prevUrl) URL.revokeObjectURL(preview._prevUrl);
                 preview._prevUrl = url;
-                preview.src      = url;
+                preview.src  = url;
+                link.href    = url;  // 長押し保存用
                 document.getElementById('photo-modal').classList.add('active');
             }, 'image/png');
 
@@ -866,6 +926,23 @@ function showToast(msg) {
     setTimeout(() => { t.style.display = 'none'; }, 2800);
 }
 
+
+
+/* AR終了 */
+function exitAR() {
+    // カメラストップ
+    const video = document.getElementById('camera-bg');
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(t => t.stop());
+        video.srcObject = null;
+    }
+    // BGM停止
+    const bgm = document.getElementById('bgm');
+    bgm.pause();
+    bgm.currentTime = 0;
+    // ページリロードでオーバーレイに戻る
+    location.reload();
+}
 
 function closePhotoModal() {
     document.getElementById('photo-modal').classList.remove('active');
