@@ -2,198 +2,126 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>🍀 Sky Parade Osaka</title>
 
-    <!-- ✅ 安定版CDN: raw.githackをやめてjsdelivr/unpkgに統一 -->
+    <!--
+      ★ AR方式変更: AR.js廃止
+         getUserMedia でカメラ映像を <video> に流して最背面に敷き
+         その上に transparent な A-Frame シーンを重ねる
+         GPS・マーカー不要 / iPhone Safari 動作確認済み方式
+    -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
-    <!-- ✅ GPS AR用の正しいビルド (NFTではなくAR.js本体) -->
-    <script src="https://cdn.jsdelivr.net/npm/ar.js@2.2.2/aframe/build/aframe-ar.js"></script>
 
-    <!-- Google Fonts: Gaelic風フォント + 日本語対応 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         :root {
-            --green:   #009a49;
-            --gold:    #f2b400;
-            --white:   #f5f0e8;
-            --dark:    #0d1a0f;
-            --orange:  #ff6b1a;
+            --green: #009a49; --gold: #f2b400;
+            --white: #f5f0e8; --dark: #0d1a0f;
+        }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Noto Sans JP', sans-serif; }
+
+        /* カメラ映像: 最背面・全画面 */
+        #camera-bg {
+            position: fixed; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: cover; z-index: 0;
         }
 
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            font-family: 'Noto Sans JP', sans-serif;
-            background: #000;
+        /* A-Frame: カメラ映像の上に透明で重ねる */
+        a-scene, canvas {
+            position: fixed !important; inset: 0 !important;
+            width: 100% !important; height: 100% !important;
+            z-index: 1 !important; background: transparent !important;
         }
 
-        /* ===== OVERLAY ===== */
+        /* OVERLAY */
         #overlay {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            overflow: hidden;
-            background: var(--dark);
+            position: fixed; inset: 0; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; overflow: hidden; background: var(--dark);
         }
-
-        /* 背景: アイルランドのグラデーション空 */
         #overlay::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: 
+            content: ''; position: absolute; inset: 0;
+            background:
                 radial-gradient(ellipse 80% 60% at 50% 80%, rgba(0,154,73,0.35) 0%, transparent 70%),
                 radial-gradient(ellipse 60% 40% at 20% 20%, rgba(242,180,0,0.15) 0%, transparent 60%),
                 radial-gradient(ellipse 50% 40% at 80% 10%, rgba(255,107,26,0.12) 0%, transparent 60%),
                 linear-gradient(185deg, #0d1a0f 0%, #0a2a15 40%, #071510 100%);
             z-index: 0;
         }
-
-        /* 浮遊するシャムロック */
-        .shamrocks {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 1;
-        }
+        .shamrocks { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
         .shamrock {
-            position: absolute;
-            font-size: clamp(1rem, 3vw, 2rem);
-            animation: floatUp var(--dur, 8s) linear var(--delay, 0s) infinite;
-            opacity: 0;
-            will-change: transform, opacity;
+            position: absolute; font-size: clamp(1rem, 3vw, 2rem);
+            animation: floatUp var(--dur, 8s) linear var(--delay, 0s) infinite; opacity: 0;
         }
         @keyframes floatUp {
-            0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+            0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
             10%  { opacity: 0.6; }
             80%  { opacity: 0.4; }
             100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
         }
-
-        /* コンテンツ */
-        .overlay-content {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            padding: 2rem;
-            max-width: 420px;
-            width: 90%;
-        }
-
+        .overlay-content { position: relative; z-index: 2; text-align: center; padding: 2rem; max-width: 420px; width: 90%; }
         .event-badge {
-            display: inline-block;
-            background: rgba(242,180,0,0.15);
-            border: 1px solid rgba(242,180,0,0.4);
-            border-radius: 100px;
-            padding: 0.35em 1.2em;
-            font-size: 0.75rem;
-            color: var(--gold);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            margin-bottom: 1.2rem;
-            backdrop-filter: blur(8px);
+            display: inline-block; background: rgba(242,180,0,0.15);
+            border: 1px solid rgba(242,180,0,0.4); border-radius: 100px;
+            padding: 0.35em 1.2em; font-size: 0.75rem; color: var(--gold);
+            letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 1.2rem;
         }
-
         .overlay-title {
             font-family: 'Cinzel Decorative', serif;
-            font-size: clamp(1.6rem, 6vw, 2.4rem);
-            color: var(--white);
-            line-height: 1.2;
-            margin-bottom: 0.4rem;
+            font-size: clamp(1.6rem, 6vw, 2.4rem); color: var(--white);
+            line-height: 1.2; margin-bottom: 0.4rem;
             text-shadow: 0 0 40px rgba(0,154,73,0.6), 0 2px 8px rgba(0,0,0,0.8);
-            letter-spacing: 0.02em;
         }
-
-        .overlay-subtitle {
-            font-size: clamp(0.8rem, 2.5vw, 1rem);
-            color: rgba(245,240,232,0.55);
-            margin-bottom: 0.8rem;
-            letter-spacing: 0.08em;
-        }
-
-        .overlay-divider {
-            width: 60px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--green), var(--gold), var(--green), transparent);
-            margin: 1.4rem auto;
-            border-radius: 2px;
-        }
-
-        .overlay-desc {
-            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
-            color: rgba(245,240,232,0.75);
-            line-height: 1.7;
-            margin-bottom: 2rem;
-        }
-
+        .overlay-subtitle { font-size: clamp(0.8rem,2.5vw,1rem); color: rgba(245,240,232,0.55); margin-bottom: 0.8rem; letter-spacing: 0.08em; }
+        .overlay-divider { width: 60px; height: 2px; background: linear-gradient(90deg, transparent, var(--green), var(--gold), var(--green), transparent); margin: 1.4rem auto; border-radius: 2px; }
+        .overlay-desc { font-size: clamp(0.85rem,2.5vw,0.95rem); color: rgba(245,240,232,0.75); line-height: 1.7; margin-bottom: 2rem; }
         .start-btn {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.6rem;
-            padding: 1rem 2.2rem;
-            font-family: 'Noto Sans JP', sans-serif;
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--dark);
+            display: inline-flex; align-items: center; gap: 0.6rem;
+            padding: 1rem 2.2rem; font-family: 'Noto Sans JP', sans-serif;
+            font-size: 1.05rem; font-weight: 700; color: var(--dark);
             background: linear-gradient(135deg, var(--gold) 0%, #f5c842 50%, var(--gold) 100%);
-            border: none;
-            border-radius: 100px;
-            cursor: pointer;
-            letter-spacing: 0.05em;
-            box-shadow: 
-                0 0 0 0 rgba(242,180,0,0.4),
-                0 8px 32px rgba(0,0,0,0.5),
-                inset 0 1px 0 rgba(255,255,255,0.3);
+            border: none; border-radius: 100px; cursor: pointer; letter-spacing: 0.05em;
             animation: pulse 2.5s ease-in-out infinite;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.15s ease; -webkit-tap-highlight-color: transparent;
         }
-        .start-btn:active {
-            transform: scale(0.96);
-        }
+        .start-btn:active { transform: scale(0.96); }
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(242,180,0,0.4), 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
-            50%       { box-shadow: 0 0 0 12px rgba(242,180,0,0), 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
+            0%,100% { box-shadow: 0 0 0 0   rgba(242,180,0,0.4), 0 8px 32px rgba(0,0,0,0.5); }
+            50%      { box-shadow: 0 0 0 12px rgba(242,180,0,0), 0 8px 32px rgba(0,0,0,0.5); }
+        }
+        .hint { margin-top: 1.4rem; font-size: 0.75rem; color: rgba(245,240,232,0.35); letter-spacing: 0.05em; }
+
+        /* カメラエラー */
+        #cam-error {
+            display: none; position: fixed; inset: 0; z-index: 9998;
+            background: rgba(13,26,15,0.96);
+            flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 2rem; color: var(--white);
+        }
+        #cam-error h3 { color: var(--gold); font-size: 1.2rem; margin-bottom: 0.8rem; }
+        #cam-error p  { font-size: 0.9rem; line-height: 1.7; color: rgba(245,240,232,0.75); }
+        #cam-error button {
+            margin-top: 1.5rem; padding: 0.8rem 2rem;
+            background: var(--green); color: #fff; border: none; border-radius: 100px;
+            font-size: 1rem; font-family: 'Noto Sans JP',sans-serif; cursor: pointer;
         }
 
-        .hint {
-            margin-top: 1.4rem;
-            font-size: 0.75rem;
-            color: rgba(245,240,232,0.35);
-            letter-spacing: 0.05em;
-        }
-
-        /* ===== フィナーレ吹き出し ===== */
+        /* フィナーレ */
         #finale-msg {
-            display: none;
-            position: fixed;
-            bottom: 2.5rem;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 8888;
-            background: rgba(10,30,14,0.88);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0,154,73,0.5);
-            border-radius: 20px;
-            padding: 1rem 1.8rem;
-            text-align: center;
-            color: var(--white);
-            font-size: 0.9rem;
-            max-width: 320px;
+            display: none; position: fixed; bottom: 2.5rem; left: 50%;
+            transform: translateX(-50%); z-index: 8888;
+            background: rgba(10,30,14,0.9); backdrop-filter: blur(12px);
+            border: 1px solid rgba(0,154,73,0.5); border-radius: 20px;
+            padding: 1rem 1.8rem; text-align: center; color: var(--white);
+            font-size: 0.9rem; max-width: 320px; width: 90%;
             box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(242,180,0,0.15);
-            animation: slideUp 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
         }
         #finale-msg .finale-emoji { font-size: 1.8rem; display: block; margin-bottom: 0.4rem; }
         #finale-msg .finale-text  { font-weight: 700; color: var(--gold); margin-bottom: 0.2rem; font-size: 1rem; }
@@ -202,38 +130,33 @@
             to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
-        /* ===== ローディングバー ===== */
+        /* ローディングバー */
         #loading-bar {
-            position: fixed;
-            bottom: 0; left: 0;
-            width: 0%;
-            height: 3px;
+            position: fixed; bottom: 0; left: 0;
+            width: 0%; height: 3px;
             background: linear-gradient(90deg, var(--green), var(--gold));
-            z-index: 9998;
-            transition: width 0.3s ease;
+            z-index: 9998; transition: width 0.3s ease;
         }
     </style>
 </head>
-
 <body>
 
-<!-- ローディングバー -->
-<div id="loading-bar"></div>
+<!-- ① カメラ映像 (最背面) -->
+<video id="camera-bg" autoplay playsinline muted></video>
 
-<!-- ===== AR シーン ===== -->
+<!-- ② A-Frame シーン (透明・GPS/AR.jsなし) -->
 <a-scene
     embedded
-    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     vr-mode-ui="enabled: false"
     renderer="antialias: true; alpha: true; precision: mediump; logarithmicDepthBuffer: true;"
-    loading-screen="dotsColor: #009a49; backgroundColor: #0d1a0f">
+    background="transparent: true"
+    loading-screen="enabled: false">
 
     <a-assets timeout="30000">
         <a-asset-item id="shark-model"   src="./whale_shark_fantasy.glb"></a-asset-item>
         <a-asset-item id="balloon-model" src="./peachy_balloon_gift-v1.glb"></a-asset-item>
         <a-asset-item id="trail-model"   src="./looping_particle_trail_fbx_0_9mb.glb"></a-asset-item>
 
-        <!-- sparkle mixin: バルーンに合わせてサイズを絶対値で管理 -->
         <a-mixin id="sparkle-large"
             geometry="primitive: sphere; radius: 0.08"
             material="color: #00ff88; shader: flat; emissive: #00ff88; emissiveIntensity: 2.5; transparent: true; opacity: 0.9"
@@ -246,128 +169,123 @@
         </a-mixin>
     </a-assets>
 
-    <!-- ===== シャーク: 位置・タイミングを統一 ===== -->
+    <!--
+      配置の考え方:
+      - カメラは原点(0,0,0)・上方向-10度
+      - オブジェクトは z=-18〜-25 の「目の前の空」
+      - シャークは左→右、バルーンは右→左で交差するパレード
+      - それぞれ逆方向に動くことで「行進」感が出る
+    -->
+
+    <!-- シャーク: 左から右へ -->
     <a-entity
         id="shark"
         gltf-model="#shark-model"
-        scale="7 7 7"
-        animation-mixer="clip: *; crossFadeDuration: 0.3; timeScale: 0.8"
+        scale="3 3 3"
+        animation-mixer="clip: *; timeScale: 0.8"
         animation__move="property: position;
-                         from: -12 28 -180;
-                         to:   -12 28  400;
-                         dur: 55000;
-                         easing: linear;
-                         loop: true;
-                         autoplay: true"
-        animation__bob="property: position;
-                        from: -12 26 0;
-                        to:   -12 30 0;
-                        dur: 4000;
-                        dir: alternate;
-                        loop: true;
-                        easing: easeInOutSine">
-        <!-- 緑のspark -->
+                         from: -16 2 -22;
+                         to:    16 2 -22;
+                         dur: 16000; easing: linear; loop: true; autoplay: true"
+        animation__bob="property: object3D.position.y;
+                        from: 1; to: 3;
+                        dur: 3800; dir: alternate; loop: true; easing: easeInOutSine">
         <a-entity mixin="sparkle-large" position=" 1.2  0.5  0.2" animation__blink="delay: 0"></a-entity>
         <a-entity mixin="sparkle-large" position="-1.2 -0.5  0.8" animation__blink="delay: 250"></a-entity>
         <a-entity mixin="sparkle-large" position=" 0.5  1.2 -0.8" animation__blink="delay: 500"></a-entity>
-        <a-entity mixin="sparkle-large" position="-0.5 -1.2 -0.4" animation__blink="delay: 750"></a-entity>
-        <!-- 金のspark -->
         <a-entity mixin="sparkle-gold"  position=" 0.8  0.8  0.5" animation__blink="delay: 120"></a-entity>
         <a-entity mixin="sparkle-gold"  position="-0.8 -0.8 -0.5" animation__blink="delay: 370"></a-entity>
     </a-entity>
 
-    <!-- ===== バルーン: sparkleをワールド座標に合わせてスケール補正 ===== -->
+    <!-- バルーン: 右から左へ (シャークと逆方向) -->
     <!--
-        balloon scale: 0.03 → sparkle position は balloon local 座標
-        balloon の 1ユニット = ワールド 0.03m
-        ワールドで 2m 離したい → position 2/0.03 = 66.7
+      balloon scale=0.012
+      sparkle補正: 1/0.012 ≈ 83
+      トレイル後方: バルーンはX-方向に進む → 後方はX+ → position X=+120
+      rotation Y+90 でトレイルをX軸方向に向ける
     -->
     <a-entity
         id="balloon"
         gltf-model="#balloon-model"
-        scale="0.03 0.03 0.03"
-        animation-mixer="clip: *; crossFadeDuration: 0.3"
+        scale="0.012 0.012 0.012"
+        animation-mixer="clip: *"
         animation__move="property: position;
-                         from: 12 22 -180;
-                         to:   12 22  400;
-                         dur: 55000;
-                         easing: linear;
-                         loop: true;
-                         autoplay: true"
-        animation__bob="property: position;
-                        from: 12 20 0;
-                        to:   12 24 0;
-                        dur: 3200;
-                        dir: alternate;
-                        loop: true;
-                        easing: easeInOutSine">
+                         from:  16 -1 -16;
+                         to:   -16 -1 -16;
+                         dur: 20000; easing: linear; loop: true; autoplay: true"
+        animation__bob="property: object3D.position.y;
+                        from: -1.2; to: 0.8;
+                        dur: 3200; dir: alternate; loop: true; easing: easeInOutSine">
 
-        <!-- sparkle: ローカル座標を balloon の逆スケール (1/0.03 ≈ 33) でオフセット -->
-        <a-entity mixin="sparkle-large" scale="33 33 33" position="  0  2  0" animation__blink="delay: 0"></a-entity>
-        <a-entity mixin="sparkle-gold"  scale="33 33 33" position=" 1.5 -1  1.5" animation__blink="delay: 200"></a-entity>
-        <a-entity mixin="sparkle-large" scale="33 33 33" position="-1.5 -2 -1.5" animation__blink="delay: 400"></a-entity>
-        <a-entity mixin="sparkle-gold"  scale="33 33 33" position="  1 -3.5  0" animation__blink="delay: 600"></a-entity>
-        <a-entity mixin="sparkle-large" scale="33 33 33" position=" -1  3  1" animation__blink="delay: 800"></a-entity>
+        <a-entity mixin="sparkle-large" scale="83 83 83" position="  0  2  0" animation__blink="delay: 0"></a-entity>
+        <a-entity mixin="sparkle-gold"  scale="83 83 83" position=" 1.5 -1  1.5" animation__blink="delay: 200"></a-entity>
+        <a-entity mixin="sparkle-large" scale="83 83 83" position="-1.5 -2 -1.5" animation__blink="delay: 400"></a-entity>
+        <a-entity mixin="sparkle-gold"  scale="83 83 83" position="  1 -3.5  0" animation__blink="delay: 600"></a-entity>
 
-        <!--
-          ===== パーティクルトレイル =====
-          balloon scale="0.03" を打ち消すため scale="33.3 33.3 33.3"
-          バルーンはZ+方向へ飛ぶ → 後方 = ローカルZ-
-          ワールドで約6m後ろ → ローカル: 6/0.03 = 200ユニット
-          rotation Y180でトレイルを進行方向に向ける
-        -->
+        <!-- 緑トレイル: バルーン後方(X+側) -->
         <a-entity
             id="trail-green"
             gltf-model="#trail-model"
-            scale="33.3 33.3 33.3"
-            position="0 0 -200"
-            rotation="0 180 0"
+            scale="83 83 83"
+            position="120 0 0"
+            rotation="0 90 0"
             animation-mixer="clip: Scene; loop: repeat; timeScale: 1.2">
         </a-entity>
-
-        <!-- 金トレイル: 少し上・手前にオフセットして重ねる -->
+        <!-- 金トレイル: 少し斜めにずらして重ねる -->
         <a-entity
             id="trail-gold"
             gltf-model="#trail-model"
-            scale="28 28 28"
-            position="0 40 -160"
-            rotation="0 180 15"
+            scale="70 70 70"
+            position="100 25 10"
+            rotation="0 90 -10"
             animation-mixer="clip: Scene; loop: repeat; timeScale: 0.9">
         </a-entity>
     </a-entity>
 
-    <!-- ✅ GPS ARカメラ設定 -->
-    <a-camera gps-camera rotation-reader></a-camera>
+    <!-- カメラ: 固定・ジャイロなし・上方向に少し傾けて「空を見る」 -->
+    <a-camera
+        position="0 0 0"
+        rotation="-10 0 0"
+        fov="80"
+        look-controls="enabled: false"
+        wasd-controls="enabled: false">
+    </a-camera>
 </a-scene>
 
-<!-- ===== OVERLAY ===== -->
+<!-- ローディングバー -->
+<div id="loading-bar"></div>
+
+<!-- OVERLAY -->
 <div id="overlay">
-    <!-- 浮遊シャムロック -->
     <div class="shamrocks" id="shamrocks"></div>
-
     <div class="overlay-content">
-        <div class="event-badge">☘ St. Patrick's Festival · Osaka 2025</div>
-
+        <div class="event-badge">☘ Ireland Festival in Osaka 2026</div>
         <h1 class="overlay-title">Sky Parade</h1>
-        <p class="overlay-subtitle">大阪×アイルランド 空のパレード</p>
-
+        <p class="overlay-subtitle">St. Patrick's Day ARスタンプラリー</p>
         <div class="overlay-divider"></div>
-
         <p class="overlay-desc">
             イベントのフィナーレ🎉<br>
-            空を見上げると、パレードが始まります。<br>
-            カメラへのアクセスを許可してください。
+            カメラを空に向けると<br>パレードが始まります！
         </p>
-
         <button class="start-btn" onclick="startExperience()">
             ☘️ パレードを始める
         </button>
-
-        <p class="hint">📍 位置情報・カメラのアクセスが必要です</p>
+        <p class="hint">📷 カメラへのアクセスを許可してください</p>
     </div>
 </div>
 
-<!-- フィナーレメッセージ -->
+<!-- カメラエラー -->
+<div id="cam-error">
+    <h3>📷 カメラを起動できませんでした</h3>
+    <p>
+        iPhoneの場合:<br>
+        設定 → Safari → カメラ →「確認」または「許可」<br><br>
+        ブラウザのアドレスバー横のカメラアイコンからも許可できます
+    </p>
+    <button onclick="retryCam()">もう一度試す</button>
+</div>
+
+<!-- フィナーレ -->
 <div id="finale-msg">
     <span class="finale-emoji">🎊</span>
     <div class="finale-text">Lá Fhéile Pádraig Sona Duit!</div>
@@ -375,100 +293,115 @@
 </div>
 
 <script>
-/* ===== シャムロックを生成 ===== */
+/* シャムロック生成 */
 (function() {
-    const container = document.getElementById('shamrocks');
-    const emojis = ['☘️','🍀','✨','💚','🌟'];
+    const c = document.getElementById('shamrocks');
+    const e = ['☘️','🍀','✨','💚','🌟'];
     for (let i = 0; i < 18; i++) {
         const el = document.createElement('div');
         el.className = 'shamrock';
-        el.textContent = emojis[i % emojis.length];
+        el.textContent = e[i % e.length];
         el.style.setProperty('--dur',   (7 + Math.random() * 8) + 's');
         el.style.setProperty('--delay', (Math.random() * 10) + 's');
         el.style.left = (Math.random() * 100) + '%';
-        container.appendChild(el);
+        c.appendChild(el);
     }
 })();
 
-/* ===== ローディングプログレス ===== */
+/* ローディングバー */
 (function() {
     const bar = document.getElementById('loading-bar');
-    let prog = 0;
+    let p = 0;
     const iv = setInterval(() => {
-        prog = Math.min(prog + Math.random() * 12, 85);
-        bar.style.width = prog + '%';
+        p = Math.min(p + Math.random() * 10, 85);
+        bar.style.width = p + '%';
     }, 400);
     window.addEventListener('load', () => {
         clearInterval(iv);
         bar.style.width = '100%';
-        setTimeout(() => { bar.style.opacity = '0'; }, 800);
+        setTimeout(() => bar.style.opacity = '0', 800);
     });
 })();
 
-/* ===== 不要パーツ非表示 & トレイルカラー適用 ===== */
+/* モデル読み込み後の調整 */
 window.addEventListener('load', function() {
     const scene = document.querySelector('a-scene');
-    const HIDDEN_NODES = new Set(['particles_0','particles_1','particles_2','ocean_0']);
-
-    // トレイルカラーマップ
-    const TRAIL_TINTS = {
-        'trail-green': { color: [0x00, 0xcc, 0x55], opacity: 0.85, emissive: 1.4 },
-        'trail-gold':  { color: [0xf2, 0xb4, 0x00], opacity: 0.72, emissive: 1.1 },
+    const HIDDEN = new Set(['particles_0','particles_1','particles_2','ocean_0']);
+    const TINTS = {
+        'trail-green': { r: 0,    g: 0.8,  b: 0.33, opacity: 0.85, emissive: 1.4 },
+        'trail-gold':  { r: 0.95, g: 0.71, b: 0,    opacity: 0.72, emissive: 1.1 },
     };
-
     scene.addEventListener('model-loaded', (e) => {
         const id = e.target.id;
-
-        // 不要ノード非表示
-        e.detail.model.traverse((node) => {
-            if (HIDDEN_NODES.has(node.name.toLowerCase())) {
-                node.visible = false;
+        e.detail.model.traverse(node => {
+            if (HIDDEN.has(node.name.toLowerCase())) node.visible = false;
+            if (TINTS[id] && node.isMesh && node.material) {
+                const t = TINTS[id];
+                const col = new THREE.Color(t.r, t.g, t.b);
+                const mats = Array.isArray(node.material) ? node.material : [node.material];
+                mats.forEach(m => {
+                    m.color.set(col);
+                    m.emissive = col.clone();
+                    m.emissiveIntensity = t.emissive;
+                    m.transparent = true; m.opacity = t.opacity;
+                    m.depthWrite = false; m.needsUpdate = true;
+                });
             }
         });
-
-        // トレイルの色・発光を上書き
-        if (TRAIL_TINTS[id]) {
-            const t = TRAIL_TINTS[id];
-            const c = new THREE.Color(t.color[0]/255, t.color[1]/255, t.color[2]/255);
-            e.detail.model.traverse((node) => {
-                if (node.isMesh && node.material) {
-                    const mats = Array.isArray(node.material) ? node.material : [node.material];
-                    mats.forEach(mat => {
-                        mat.color.set(c);
-                        mat.emissive = c.clone();
-                        mat.emissiveIntensity = t.emissive;
-                        mat.transparent = true;
-                        mat.opacity = t.opacity;
-                        mat.depthWrite = false; // パーティクルの透明度を正しく描画
-                        mat.needsUpdate = true;
-                    });
-                }
-            });
-        }
-
-        console.log('[AR] モデル調整完了:', id);
+        console.log('[Parade] loaded:', id);
     });
 });
 
-/* ===== スタート ===== */
-function startExperience() {
-    const overlay = document.getElementById('overlay');
-    overlay.style.transition = 'opacity 0.6s ease';
-    overlay.style.opacity = '0';
-    setTimeout(() => { overlay.style.display = 'none'; }, 650);
+/* カメラ起動 */
+async function startCamera() {
+    const video = document.getElementById('camera-bg');
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false
+        });
+        video.srcObject = stream;
+        await video.play();
+        return true;
+    } catch (err) {
+        console.warn('[Camera] error:', err.name, err.message);
+        return false;
+    }
+}
 
-    // 45秒後にフィナーレメッセージ表示
+/* スタート */
+async function startExperience() {
+    const overlay = document.getElementById('overlay');
+    overlay.style.transition = 'opacity 0.5s ease';
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.style.display = 'none', 550);
+
+    const ok = await startCamera();
+    if (!ok) {
+        document.getElementById('cam-error').style.display = 'flex';
+        return;
+    }
     setTimeout(showFinale, 45000);
 }
 
-/* ===== フィナーレ ===== */
+/* リトライ */
+async function retryCam() {
+    const ok = await startCamera();
+    if (ok) {
+        document.getElementById('cam-error').style.display = 'none';
+        setTimeout(showFinale, 45000);
+    }
+}
+
+/* フィナーレ */
 function showFinale() {
     const msg = document.getElementById('finale-msg');
+    msg.style.animation = 'slideUp 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards';
     msg.style.display = 'block';
     setTimeout(() => {
         msg.style.transition = 'opacity 1s ease';
         msg.style.opacity = '0';
-        setTimeout(() => { msg.style.display = 'none'; }, 1100);
+        setTimeout(() => msg.style.display = 'none', 1100);
     }, 8000);
 }
 </script>
