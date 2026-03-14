@@ -311,7 +311,7 @@
 
     function arcY(t, base) {
         // sin曲線で頭上付近(t≈0.6)が最高点
-        return base + Math.sin(Math.PI * Math.pow(t, 0.65)) * 7;
+        return base + Math.sin(Math.PI * Math.pow(t, 0.65)) * 12;
     }
     function bob(ms, period, amp) {
         return Math.sin(ms / period * Math.PI * 2) * amp;
@@ -331,7 +331,7 @@
             const z = FROM_Z + Z_RANGE * t;
             shark.object3D.position.set(
                 SHARK_X,
-                arcY(t, 1.5) + bob(elapsed, 3800, 0.4),
+                arcY(t, 3) + bob(elapsed, 3800, 0.4),
                 z
             );
             // sharkはZ-方向へ進む → デフォルト向き(y=0)でOK
@@ -343,7 +343,7 @@
             const zb = FROM_Z + Z_RANGE * tb;
             balloon.object3D.position.set(
                 BALLOON_X,
-                arcY(tb, 0.5) + bob(elapsed, 3200, 0.3),
+                arcY(tb, 2) + bob(elapsed, 3200, 0.3),
                 zb
             );
         }
