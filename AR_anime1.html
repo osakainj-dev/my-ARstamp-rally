@@ -633,7 +633,7 @@ window.addEventListener('load', function() {
             const mat = new THREE.ShaderMaterial({
                 uniforms: {
                     map:       { value: tex },
-                    threshold: { value: 0.08 }, // この輝度以下を透明に
+                    threshold: { value: 0.13 }, // この輝度以下を透明に
                     softness:  { value: 0.15 }, // フェードの幅
                 },
                 vertexShader: `
