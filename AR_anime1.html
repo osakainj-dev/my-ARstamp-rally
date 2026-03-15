@@ -624,15 +624,39 @@ window.addEventListener('load', function() {
             const tex = new THREE.VideoTexture(vid);
             tex.minFilter = THREE.LinearFilter;
             tex.magFilter = THREE.LinearFilter;
-            tex.format    = THREE.RGBFormat;
 
-            // PlaneGeometry: 横長に虹を表示
-            // 動画アスペクト比 1280:720 = 16:9
-            // ワールドサイズ: 幅40m × 高さ22.5m
+            // PlaneGeometry: 横長に虹を表示 (16:9)
             const geo = new THREE.PlaneGeometry(40, 22.5);
-            const mat = new THREE.MeshBasicMaterial({
-                map: tex,
-                blending:    THREE.AdditiveBlending, // 黒→透明
+
+            // ShaderMaterial: 輝度が低いピクセルを透明にする
+            // threshold以下の輝度を完全透明、それ以上を輝度に応じてフェード
+            const mat = new THREE.ShaderMaterial({
+                uniforms: {
+                    map:       { value: tex },
+                    threshold: { value: 0.08 }, // この輝度以下を透明に
+                    softness:  { value: 0.15 }, // フェードの幅
+                },
+                vertexShader: `
+                    varying vec2 vUv;
+                    void main() {
+                        vUv = uv;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform sampler2D map;
+                    uniform float threshold;
+                    uniform float softness;
+                    varying vec2 vUv;
+                    void main() {
+                        vec4 col = texture2D(map, vUv);
+                        // 輝度 = RGBの最大値
+                        float lum = max(col.r, max(col.g, col.b));
+                        // threshold以下は透明、threshold+softness以上は完全不透明
+                        float alpha = smoothstep(threshold, threshold + softness, lum);
+                        gl_FragColor = vec4(col.rgb, alpha);
+                    }
+                `,
                 transparent: true,
                 depthWrite:  false,
                 side:        THREE.DoubleSide,
