@@ -598,7 +598,7 @@ window.addEventListener('load', function() {
                 arcY(tt, 2) + bob(elapsed, 3200, 0.3),
                 FROM_Z + Z_RANGE * tt + 2
             );
-            trailG.object3D.rotation.y = Math.PI;
+            trailG.object3D.rotation.set(-Math.PI / 2, 0, 0);
         }
 
         /* トレイル金: バルーンより3%遅れて後方 */
@@ -609,7 +609,7 @@ window.addEventListener('load', function() {
                 arcY(tt2, 2.2) + bob(elapsed, 3000, 0.25),
                 FROM_Z + Z_RANGE * tt2 + 3
             );
-            trailGo.object3D.rotation.y = Math.PI;
+            trailGo.object3D.rotation.set(-Math.PI / 2, 0, 0);
         }
 
         /* トレイル追加A: バルーンより4%遅れ */
@@ -621,7 +621,7 @@ window.addEventListener('load', function() {
                 arcY(ta, 1.8) + bob(elapsed, 3400, 0.3),
                 FROM_Z + Z_RANGE * ta + 4
             );
-            trailBA.object3D.rotation.y = Math.PI;
+            trailBA.object3D.rotation.set(-Math.PI / 2, 0, 0);
         }
 
         /* トレイル追加B: バルーンより5%遅れ */
@@ -633,7 +633,7 @@ window.addEventListener('load', function() {
                 arcY(tb2, 2.5) + bob(elapsed, 2800, 0.2),
                 FROM_Z + Z_RANGE * tb2 + 5
             );
-            trailBB.object3D.rotation.y = Math.PI;
+            trailBB.object3D.rotation.set(-Math.PI / 2, 0, 0);
         }
 
         if (scene3D) updateParticles(time);
