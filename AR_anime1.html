@@ -603,45 +603,47 @@ window.addEventListener('load', function() {
         const renderer = document.querySelector('a-scene').renderer;
         if (renderer) renderer.preserveDrawingBuffer = true;
 
-        /* ===== 虹 =====
-           TorusGeometry の上半分を7色で描画
-           位置: 正面やや上(y=6)、少し奥(z=-30)
-           カメラのfov=80・上向き-25度を考慮した空の位置
+        /* ===== 虹（動画テクスチャ + AdditiveBlending） =====
+           黒背景の虹動画を VideoTexture でテクスチャに貼り
+           AdditiveBlending で黒を透過として扱う
+           PlaneGeometry に貼って空に固定配置
         */
         const rainbowEl = document.getElementById('rainbow');
         if (rainbowEl) {
-            const COLORS = [
-                0xFF0000, // 赤
-                0xFF7700, // オレンジ
-                0xFFFF00, // 黄
-                0x00CC00, // 緑
-                0x0066FF, // 青
-                0x4400AA, // 藍
-                0x8800CC, // 紫
-            ];
-            const group = new THREE.Group();
+            // 動画エレメント生成
+            const vid = document.createElement('video');
+            vid.src      = './img/video/69595_1280x720.mov';
+            vid.loop     = true;
+            vid.muted    = true;
+            vid.playsInline = true;
+            vid.autoplay = true;
+            vid.crossOrigin = 'anonymous';
+            vid.play().catch(() => {});
 
-            COLORS.forEach((color, i) => {
-                const radius    = 8 - i * 0.7;  // 外側から内側へ
-                const thickness = 0.35;
-                const geo = new THREE.TorusGeometry(radius, thickness, 8, 60, Math.PI);
-                const mat = new THREE.MeshBasicMaterial({
-                    color,
-                    transparent: true,
-                    opacity: 0.75,
-                    side: THREE.DoubleSide,
-                    depthWrite: false,
-                });
-                const mesh = new THREE.Mesh(geo, mat);
-                group.add(mesh);
+            // VideoTexture
+            const tex = new THREE.VideoTexture(vid);
+            tex.minFilter = THREE.LinearFilter;
+            tex.magFilter = THREE.LinearFilter;
+            tex.format    = THREE.RGBFormat;
+
+            // PlaneGeometry: 横長に虹を表示
+            // 動画アスペクト比 1280:720 = 16:9
+            // ワールドサイズ: 幅40m × 高さ22.5m
+            const geo = new THREE.PlaneGeometry(40, 22.5);
+            const mat = new THREE.MeshBasicMaterial({
+                map: tex,
+                blending:    THREE.AdditiveBlending, // 黒→透明
+                transparent: true,
+                depthWrite:  false,
+                side:        THREE.DoubleSide,
             });
+            const mesh = new THREE.Mesh(geo, mat);
 
-            // 上半円になるよう回転（TorusはXY平面に生成される）
-            group.rotation.x = Math.PI; // 上向きに半円
-            // 位置: 正面・屋根の高さ・少し奥
-            group.position.set(0, 6, -30);
+            // 位置: 正面・屋根の高さ・奥
+            // y=8 で屋根くらいの高さ、z=-35 で適度な奥行き
+            mesh.position.set(0, 8, -35);
 
-            rainbowEl.object3D.add(group);
+            rainbowEl.object3D.add(mesh);
         }
 
         requestAnimationFrame(tick);
