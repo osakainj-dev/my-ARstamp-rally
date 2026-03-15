@@ -398,7 +398,7 @@ loading-screen="enabled: false">
 
 <!-- トレイル(緑): シャーク後方に独立配置・JSで追従 -->
 <a-entity
-    id="trail-shark"
+    id="trail-green"
     gltf-model="#trail-model"
     scale="12 12 12"
     rotation="0 0 0"
@@ -407,7 +407,7 @@ loading-screen="enabled: false">
 
 <!-- トレイル(緑): バルーン後方に独立配置・JSで追従 -->
 <a-entity
-    id="trail-balloon-green"
+    id="trail-green2"
     gltf-model="#trail-model"
     scale="2 2 2"
     rotation="0 0 0"
@@ -416,7 +416,7 @@ loading-screen="enabled: false">
 
 <!-- トレイル(金): バルーン後方に独立配置・JSで追従 -->
 <a-entity
-    id="trail-balloon-gold"
+    id="trail-gold"
     gltf-model="#trail-model"
     scale="1.6 1.6 1.6"
     rotation="0 0 0"
@@ -497,6 +497,9 @@ loading-screen="enabled: false">
             ☘️ パレードを始める
         </button>
         <p class="hint">📷 カメラへのアクセスを許可してください</p>
+        <a href="https://dummy-stamp-rally.example.com" class="stamp-rally-link" style="margin-top:1.2rem; display:inline-block;">
+            ☘️ スタンプラリーに戻る
+        </a>
     </div>
 </div>
 
@@ -548,15 +551,14 @@ loading-screen="enabled: false">
         const size = 14 + Math.random() * 22;
         const dur  = 0.5 + Math.random() * 0.6;
 
-        el.style.cssText = [
-            'left:'      + (5 + Math.random() * 90) + '%',
-            'top:'       + (5 + Math.random() * 80) + '%',
-            'font-size:' + size + 'px',
-            'color:'     + COLORS[Math.floor(Math.random() * COLORS.length)],
-            '--dur:'     + dur + 's',
-            'text-shadow: 0 0 8px currentColor, 0 0 16px currentColor',
-            'pointer-events: none',
-        ].join(';');
+        const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+        el.style.left           = (5 + Math.random() * 90) + '%';
+        el.style.top            = (5 + Math.random() * 80) + '%';
+        el.style.fontSize       = size + 'px';
+        el.style.color          = color;
+        el.style.setProperty('--dur', dur + 's');
+        el.style.textShadow     = '0 0 8px ' + color + ', 0 0 16px ' + color;
+        el.style.pointerEvents  = 'none';
 
         document.getElementById('flash-container').appendChild(el);
         el.addEventListener('animationend', () => el.remove());
@@ -696,27 +698,26 @@ function stopBGM() {
         }
 
         // トレイル: バルーンの少し後ろを独立追尾
-        const trailG = document.getElementById('trail-green');
-        const trailGo = document.getElementById('trail-gold');
-        if (trailG && trailG.object3D) {
-            const tt = (t + 0.83) % 1;  // バルーンより2%遅れ
-            const zt = FROM_Z + Z_RANGE * tt;
-            trailG.object3D.position.set(
+        // バルーントレイル（緑・金）
+        const trailBG = document.getElementById('trail-green2');
+        const trailBGo = document.getElementById('trail-gold');
+        if (trailBG && trailBG.object3D) {
+            const tt = (t + 0.83) % 1;
+            trailBG.object3D.position.set(
                 BALLOON_X,
                 arcY(tt, 2) + bob(elapsed, 3200, 0.3),
-                zt + 2
+                FROM_Z + Z_RANGE * tt + 2
             );
-            trailG.object3D.rotation.y = Math.PI; // 進行方向に向ける
+            trailBG.object3D.rotation.y = Math.PI;
         }
-        if (trailGo && trailGo.object3D) {
-            const tt2 = (t + 0.82) % 1;  // さらに1%遅れ
-            const zt2 = FROM_Z + Z_RANGE * tt2;
-            trailGo.object3D.position.set(
+        if (trailBGo && trailBGo.object3D) {
+            const tt2 = (t + 0.82) % 1;
+            trailBGo.object3D.position.set(
                 BALLOON_X + 0.3,
                 arcY(tt2, 2.2) + bob(elapsed, 3000, 0.25),
-                zt2 + 3
+                FROM_Z + Z_RANGE * tt2 + 3
             );
-            trailGo.object3D.rotation.y = Math.PI;
+            trailBGo.object3D.rotation.y = Math.PI;
         }
         // トレイル: 各モデルの後方（Z+側）に独立追従
         const trailShark = document.getElementById('trail-shark');
