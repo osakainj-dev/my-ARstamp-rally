@@ -245,7 +245,7 @@
 <a-scene
     embedded
     vr-mode-ui="enabled: false"
-    renderer="antialias: true; alpha: true; precision: mediump; logarithmicDepthBuffer: true; preserveDrawingBuffer: true;"
+    renderer="antialias: true; alpha: true; precision: mediump; logarithmicDepthBuffer: true;"
     background="transparent: true"
     loading-screen="enabled: false">
 
@@ -272,35 +272,15 @@
         animation-mixer="clip: *">
     </a-entity>
 
-    <!-- トレイル緑: バルーン後方をJS tickで追従 -->
-    <a-entity
-        id="trail-green"
-        gltf-model="#trail-model"
-        scale="5 5 5"
-        animation-mixer="clip: Scene; loop: repeat; timeScale: 1.2">
-    </a-entity>
-
-    <!-- トレイル金: バルーン後方をJS tickで追従 -->
-    <a-entity
-        id="trail-gold"
-        gltf-model="#trail-model"
-        scale="4 4 4"
-        animation-mixer="clip: Scene; loop: repeat; timeScale: 0.9">
-    </a-entity>
-
-    <!-- トレイル追加: バルーン用（大きめ・2本） -->
-    <a-entity
-        id="trail-balloon-a"
-        gltf-model="#trail-model"
-        scale="5 5 5"
-        animation-mixer="clip: Scene; loop: repeat; timeScale: 1.1">
-    </a-entity>
-    <a-entity
-        id="trail-balloon-b"
-        gltf-model="#trail-model"
-        scale="4 4 4"
-        animation-mixer="clip: Scene; loop: repeat; timeScale: 0.8">
-    </a-entity>
+    <!-- トレイル x8本: バルーン後方をJS tickで追従 -->
+    <a-entity id="trail-0" gltf-model="#trail-model" scale="12 12 12" animation-mixer="clip: Scene; loop: repeat; timeScale: 1.2"></a-entity>
+    <a-entity id="trail-1" gltf-model="#trail-model" scale="10 10 10" animation-mixer="clip: Scene; loop: repeat; timeScale: 0.9"></a-entity>
+    <a-entity id="trail-2" gltf-model="#trail-model" scale="11 11 11" animation-mixer="clip: Scene; loop: repeat; timeScale: 1.1"></a-entity>
+    <a-entity id="trail-3" gltf-model="#trail-model" scale="9  9  9"  animation-mixer="clip: Scene; loop: repeat; timeScale: 0.8"></a-entity>
+    <a-entity id="trail-4" gltf-model="#trail-model" scale="12 12 12" animation-mixer="clip: Scene; loop: repeat; timeScale: 1.0"></a-entity>
+    <a-entity id="trail-5" gltf-model="#trail-model" scale="10 10 10" animation-mixer="clip: Scene; loop: repeat; timeScale: 1.3"></a-entity>
+    <a-entity id="trail-6" gltf-model="#trail-model" scale="11 11 11" animation-mixer="clip: Scene; loop: repeat; timeScale: 0.7"></a-entity>
+    <a-entity id="trail-7" gltf-model="#trail-model" scale="9  9  9"  animation-mixer="clip: Scene; loop: repeat; timeScale: 1.4"></a-entity>
 
     <!-- カメラ -->
     <a-camera
@@ -558,9 +538,6 @@ window.addEventListener('load', function() {
 
         const shark   = document.getElementById('shark');
         const balloon = document.getElementById('balloon');
-        const trailG  = document.getElementById('trail-green');
-        const trailGo = document.getElementById('trail-gold');
-
         /* シャーク */
         if (shark && shark.object3D) {
             const z = FROM_Z + Z_RANGE * t;
@@ -590,51 +567,29 @@ window.addEventListener('load', function() {
             }
         }
 
-        /* トレイル緑: バルーンより2%遅れて後方 */
-        if (trailG && trailG.object3D) {
-            const tt = (t + 0.83) % 1;
-            trailG.object3D.position.set(
-                BALLOON_X,
-                arcY(tt, 2) + bob(elapsed, 3200, 0.3),
-                FROM_Z + Z_RANGE * tt + 2
-            );
-            trailG.object3D.rotation.set(-Math.PI / 2, 0, 0);
-        }
-
-        /* トレイル金: バルーンより3%遅れて後方 */
-        if (trailGo && trailGo.object3D) {
-            const tt2 = (t + 0.82) % 1;
-            trailGo.object3D.position.set(
-                BALLOON_X + 0.3,
-                arcY(tt2, 2.2) + bob(elapsed, 3000, 0.25),
-                FROM_Z + Z_RANGE * tt2 + 3
-            );
-            trailGo.object3D.rotation.set(-Math.PI / 2, 0, 0);
-        }
-
-        /* トレイル追加A: バルーンより4%遅れ */
-        const trailBA = document.getElementById('trail-balloon-a');
-        if (trailBA && trailBA.object3D) {
-            const ta = (t + 0.81) % 1;
-            trailBA.object3D.position.set(
-                BALLOON_X - 0.3,
-                arcY(ta, 1.8) + bob(elapsed, 3400, 0.3),
-                FROM_Z + Z_RANGE * ta + 4
-            );
-            trailBA.object3D.rotation.set(-Math.PI / 2, 0, 0);
-        }
-
-        /* トレイル追加B: バルーンより5%遅れ */
-        const trailBB = document.getElementById('trail-balloon-b');
-        if (trailBB && trailBB.object3D) {
-            const tb2 = (t + 0.80) % 1;
-            trailBB.object3D.position.set(
-                BALLOON_X,
-                arcY(tb2, 2.5) + bob(elapsed, 2800, 0.2),
-                FROM_Z + Z_RANGE * tb2 + 5
-            );
-            trailBB.object3D.rotation.set(-Math.PI / 2, 0, 0);
-        }
+        /* トレイル x8本: バルーン後方に時間差・位置差でファン状に広がる */
+        const TRAIL_CONFIGS = [
+            { id: 'trail-0', tOff: 0.83, xOff:  0.0, yBase: 2.0, zOff: 2, bobP: 3200, bobA: 0.30 },
+            { id: 'trail-1', tOff: 0.82, xOff:  0.4, yBase: 2.2, zOff: 3, bobP: 3000, bobA: 0.25 },
+            { id: 'trail-2', tOff: 0.81, xOff: -0.4, yBase: 1.8, zOff: 4, bobP: 3400, bobA: 0.30 },
+            { id: 'trail-3', tOff: 0.80, xOff:  0.0, yBase: 2.5, zOff: 5, bobP: 2800, bobA: 0.20 },
+            { id: 'trail-4', tOff: 0.79, xOff:  0.5, yBase: 1.6, zOff: 6, bobP: 3600, bobA: 0.35 },
+            { id: 'trail-5', tOff: 0.78, xOff: -0.5, yBase: 2.8, zOff: 7, bobP: 2600, bobA: 0.25 },
+            { id: 'trail-6', tOff: 0.77, xOff:  0.2, yBase: 1.4, zOff: 8, bobP: 3800, bobA: 0.30 },
+            { id: 'trail-7', tOff: 0.76, xOff: -0.2, yBase: 3.0, zOff: 9, bobP: 2400, bobA: 0.20 },
+        ];
+        TRAIL_CONFIGS.forEach(cfg => {
+            const el = document.getElementById(cfg.id);
+            if (el && el.object3D) {
+                const tc = (t + cfg.tOff) % 1;
+                el.object3D.position.set(
+                    BALLOON_X + cfg.xOff,
+                    arcY(tc, cfg.yBase) + bob(elapsed, cfg.bobP, cfg.bobA),
+                    FROM_Z + Z_RANGE * tc + cfg.zOff
+                );
+                el.object3D.rotation.set(-Math.PI / 2, 0, 0);
+            }
+        });
 
         if (scene3D) updateParticles(time);
         requestAnimationFrame(tick);
@@ -642,6 +597,9 @@ window.addEventListener('load', function() {
 
     document.querySelector('a-scene').addEventListener('loaded', () => {
         scene3D = document.querySelector('a-scene').object3D;
+        // preserveDrawingBuffer: スクリーンショットのためWebGLに直接設定
+        const renderer = document.querySelector('a-scene').renderer;
+        if (renderer) renderer.preserveDrawingBuffer = true;
         requestAnimationFrame(tick);
     });
 })();
