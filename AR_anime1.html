@@ -307,10 +307,6 @@
 </head>
 <body>
 
-<!-- BGM -->
-<audio id="bgm" loop>
-    <source src="./img/music/eigin_leitir_moir.m4a" type="audio/mp4">
-</audio>
 
 <!-- ① カメラ映像 (最背面) -->
 <video id="camera-bg" autoplay playsinline muted></video>
@@ -326,7 +322,6 @@
     <a-assets timeout="30000">
         <a-asset-item id="shark-model"   src="./whale_shark_fantasy.glb"></a-asset-item>
         <a-asset-item id="balloon-model"  src="./peachy_balloon_gift-v1.glb"></a-asset-item>
-        <a-asset-item id="sparkle-model" src="./peachy_balloon_gift-v1.glb"></a-asset-item>
         <a-asset-item id="trail-model"   src="./img/glb/looping_particle_trail_fbx_0.9mb.glb"></a-asset-item>
         </a-assets>
 
@@ -368,7 +363,7 @@
         <a-entity
             id="trail-green"
             gltf-model="#trail-model"
-            scale="45 45 45"
+            scale="90 90 90"
             position="0 0 200"
             rotation="0 180 0"
             animation-mixer="clip: Scene; loop: repeat; timeScale: 1.2">
@@ -376,19 +371,11 @@
         <a-entity
             id="trail-gold"
             gltf-model="#trail-model"
-            scale="38 38 38"
+            scale="76 76 76"
             position="15 20 170"
             rotation="0 180 -10"
             animation-mixer="clip: Scene; loop: repeat; timeScale: 0.9">
         </a-entity>
-    </a-entity>
-
-    <!-- スパークル: バルーンと同じGLBを独立エンティティとして追尾 -->
-    <a-entity
-        id="sparkle-follower"
-        gltf-model="#sparkle-model"
-        scale="0.03 0.03 0.03"
-        animation-mixer="clip: *">
     </a-entity>
 
     <!-- カメラ: 上向き25度で「川の向こう〜空〜頭上」を見渡す -->
@@ -547,6 +534,50 @@
     });
 })();
 
+
+/* ===== BGM (Web Audio API) =====
+   <audio>タグはiOS Safariで不安定なため
+   fetch → decodeAudioData → BufferSource で再生する方式
+*/
+let _bgmCtx = null;
+let _bgmSource = null;
+let _bgmBuffer = null;
+
+async function playBGM() {
+    try {
+        // AudioContext生成（ユーザー操作中に呼ぶ必要あり）
+        _bgmCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // バッファ未取得なら fetch
+        if (!_bgmBuffer) {
+            const res  = await fetch('./img/music/eigin_leitir_moir.m4a');
+            const arr  = await res.arrayBuffer();
+            _bgmBuffer = await _bgmCtx.decodeAudioData(arr);
+        }
+
+        // 再生
+        _bgmSource = _bgmCtx.createBufferSource();
+        _bgmSource.buffer = _bgmBuffer;
+        _bgmSource.loop   = true;
+
+        const gain = _bgmCtx.createGain();
+        gain.gain.value = 0.7;
+        _bgmSource.connect(gain);
+        gain.connect(_bgmCtx.destination);
+        _bgmSource.start(0);
+        console.log('[BGM] 再生開始');
+    } catch(e) {
+        console.warn('[BGM] 失敗:', e);
+    }
+}
+
+function stopBGM() {
+    try { _bgmSource && _bgmSource.stop(); } catch(e) {}
+    try { _bgmCtx    && _bgmCtx.close();   } catch(e) {}
+    _bgmSource = null;
+    _bgmCtx    = null;
+}
+
 /* ===== フライオーバー: 放物線アーク制御 =====
    Z軸方向に一定速で飛ばしつつ Y(高さ)をsin曲線でアーチ状に変化させる
    遠く(Z:-55)で低め → 頭上(Z:0付近)で最高 → 後方(Z:+20)で再び低く
@@ -598,19 +629,6 @@
                 zb
             );
         }
-
-        // スパークル: バルーンよりさらに5%遅れて後方を追尾
-        const sparkle = document.getElementById('sparkle-follower');
-        if (sparkle && sparkle.object3D) {
-            const ts = (t + 0.80) % 1;
-            const zs = FROM_Z + Z_RANGE * ts;
-            sparkle.object3D.position.set(
-                BALLOON_X + 0.3,
-                arcY(ts, 2) + bob(elapsed, 3200, 0.3),
-                zs + 3.5  // バルーンより少し後ろ
-            );
-        }
-
         requestAnimationFrame(tick);
     }
 
@@ -818,11 +836,8 @@ async function startExperience() {
         document.getElementById('flash-container').style.display = 'block';
     }, 600);
 
-    // BGM再生 (ユーザー操作中に直接呼ぶ)
-    const bgm = document.getElementById('bgm');
-    bgm.volume = 0.7;
-    bgm.currentTime = 0;
-    bgm.play().catch(e => console.warn('[BGM]', e.name, e.message));
+    // BGM: Web Audio API で再生（iOS Safari で最も確実）
+    playBGM();
 
     const ok = await startCamera();
     if (!ok) {
@@ -834,11 +849,6 @@ async function startExperience() {
 
 /* リトライ */
 async function retryCam() {
-    // BGM再生 (iOS: ユーザー操作後に呼ぶ必要あり)
-    const bgm = document.getElementById('bgm');
-    bgm.volume = 0.7;
-    bgm.play().catch(e => console.warn('BGM:', e));
-
     const ok = await startCamera();
     if (ok) {
         document.getElementById('cam-error').style.display = 'none';
@@ -950,9 +960,7 @@ function exitAR() {
         video.srcObject = null;
     }
     // BGM停止
-    const bgm = document.getElementById('bgm');
-    bgm.pause();
-    bgm.currentTime = 0;
+    stopBGM();
     // ページリロードでオーバーレイに戻る
     location.reload();
 }
